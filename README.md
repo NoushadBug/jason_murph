@@ -4,7 +4,7 @@ Chrome extension that turns UConn Dining's "short menu" pages into a Canva-style
 
 ## Load the extension
 - Open `chrome://extensions/`, enable **Developer mode**, then choose **Load unpacked**.
-- Select the `extension/` folder from this project.
+- Select this project folder (contains `manifest.json`, `content-script.js`, `styles/`).
 - Pin the extension if you want faster access to the trigger button.
 
 ## Use it
@@ -17,8 +17,8 @@ Chrome extension that turns UConn Dining's "short menu" pages into a Canva-style
   - Use the `×` button to close the overlay when you are done.
 
 ## Customising the look
-- Typography, colours, spacing, and responsive rules live in `extension/styles/content.css`.
-- Poster content is rendered by `extension/content-script.js`; adjust the DOM builders there if you want to rearrange sections or add new data points.
+- Typography, colours, spacing, and responsive rules live in `styles/content.css`.
+- Poster content is rendered by `content-script.js`; adjust the DOM builders there if you want to rearrange sections or add new data points.
 - Category labels are pulled from the menu's section names (e.g. `-- FEAST --`). Remove or restyle them in `createMealColumn` if you prefer a flat list.
 
 ## Notes & limitations

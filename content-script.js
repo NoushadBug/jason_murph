@@ -70,9 +70,11 @@
       return null;
     }
 
-    const headerRow = mealEl.closest("tr");
+    const headerRow = mealEl.closest("table")?.parentElement?.parentElement;
     const itemsTable = headerRow?.nextElementSibling?.querySelector("table");
-    const rows = itemsTable ? Array.from(itemsTable.querySelectorAll(":scope > tr")) : [];
+    const rows = itemsTable
+      ? Array.from(itemsTable.querySelectorAll(":scope > tbody > tr, :scope > tr"))
+      : [];
 
     const items = [];
     let currentCategory = "";
@@ -427,5 +429,13 @@
     document.addEventListener("DOMContentLoaded", bootstrap);
   } else {
     bootstrap();
+  }
+
+  // Expose parser for debugging/testing without affecting runtime behaviour.
+  if (typeof window !== "undefined") {
+    window.__uconnMenuFormatter = Object.assign(
+      window.__uconnMenuFormatter || {},
+      { parseMenuData }
+    );
   }
 })();
