@@ -1,0 +1,304 @@
+.uconn-menu-trigger {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2147483000;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  background: #0b2c6a;
+  color: #ffffff;
+  font-family: 'Montserrat', 'Segoe UI', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(7, 27, 73, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.uconn-menu-trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(7, 27, 73, 0.4);
+  background: #0f3b94;
+}
+
+.uconn-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 16, 38, 0.88);
+  backdrop-filter: blur(4px);
+  z-index: 2147483600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.uconn-menu-overlay__close {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.uconn-menu-overlay__close:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(1.04);
+}
+
+.uconn-menu-overlay__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.uconn-menu-overlay__instructions {
+  max-width: 720px;
+  text-align: center;
+  font-family: 'Montserrat', 'Segoe UI', sans-serif;
+  font-size: 15px;
+  color: #f1f5ff;
+  letter-spacing: 0.02em;
+}
+
+.uconn-menu-overlay__print {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-family: 'Montserrat', 'Segoe UI', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: #4ade80;
+  color: #052c23;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.35);
+}
+
+.uconn-menu-overlay__print:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(16, 185, 129, 0.42);
+}
+
+#uconn-menu-poster {
+  width: clamp(720px, 80vw, 8.5in);
+  min-height: 11in;
+  background: #ffffff;
+  border: 26px solid #032b63;
+  border-radius: 22px;
+  box-shadow: 0 30px 60px rgba(5, 18, 43, 0.35);
+  box-sizing: border-box;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  font-family: 'Montserrat', 'Segoe UI', sans-serif;
+  color: #111827;
+}
+
+.uconn-menu-poster__header {
+  background: #032b63;
+  border-radius: 16px;
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.uconn-menu-poster__logo {
+  width: 110px;
+  height: auto;
+}
+
+.uconn-menu-poster__header-text {
+  text-align: center;
+  flex: 1;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.uconn-menu-poster__title {
+  font-family: 'Bebas Neue', 'Impact', sans-serif;
+  font-size: 56px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.uconn-menu-poster__date {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.uconn-menu-poster__subtitle {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: #9fe7c4;
+}
+
+.uconn-menu-poster__hall {
+  text-align: center;
+  font-family: 'Bebas Neue', 'Impact', sans-serif;
+  font-size: 44px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #0b2c6a;
+}
+
+.uconn-menu-poster__grid {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.uconn-menu-meal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.uconn-menu-meal__header {
+  text-align: center;
+  font-family: 'Bebas Neue', 'Impact', sans-serif;
+  font-size: 30px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0b2c6a;
+  padding-bottom: 8px;
+  border-bottom: 4px solid #0b2c6a;
+}
+
+.uconn-menu-meal__items {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.uconn-menu-item {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(11, 44, 106, 0.15);
+  cursor: pointer;
+}
+
+.uconn-menu-item:last-child {
+  border-bottom: none;
+}
+
+.uconn-menu-item__category {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(11, 44, 106, 0.78);
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.uconn-menu-meal__items > .uconn-menu-item__category:first-child {
+  margin-top: 0;
+}
+
+.uconn-menu-item__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.35;
+}
+
+.uconn-menu-item__note {
+  font-size: 13px;
+  color: #4b5563;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.uconn-menu-item__allergens {
+  font-size: 13px;
+  color: #d93030;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.uconn-menu-item__tags {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f7760;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.uconn-menu-item[data-suggested='true'] .uconn-menu-item__title {
+  color: #008c5a;
+  text-shadow: 0 0 0.01px currentColor;
+}
+
+.uconn-menu-item[data-suggested='true'] {
+  border-color: rgba(0, 140, 90, 0.4);
+}
+
+.uconn-menu-item[data-suggested='true'] .uconn-menu-item__tags {
+  color: #008c5a;
+}
+
+@media (max-width: 1024px) {
+  #uconn-menu-poster {
+    padding: 32px 28px;
+  }
+
+  .uconn-menu-poster__header {
+    flex-direction: column;
+  }
+
+  .uconn-menu-poster__logo {
+    width: 90px;
+  }
+}
+
+@page {
+  size: Letter;
+  margin: 0.35in;
+}
+
+body[data-uconn-printing='true'] > :not(.uconn-menu-overlay) {
+  display: none !important;
+}
+
+body[data-uconn-printing='true'] .uconn-menu-overlay {
+  background: transparent !important;
+  padding: 0 !important;
+  gap: 0 !important;
+}
+
+body[data-uconn-printing='true'] .uconn-menu-overlay__close,
+body[data-uconn-printing='true'] .uconn-menu-overlay__actions,
+body[data-uconn-printing='true'] .uconn-menu-trigger {
+  display: none !important;
+}
+
+body[data-uconn-printing='true'] #uconn-menu-poster {
+  box-shadow: none !important;
+  width: 8.5in !important;
+  min-height: 11in !important;
+  margin: 0 auto !important;
+  border-width: 0.35in !important;
+}
