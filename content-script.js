@@ -19,6 +19,101 @@
     dairy: "Dairy"
   };
 
+  const INFO_PAGE_CONTENT = [
+    {
+      title: "Weekday Hours",
+      groups: [
+        {
+          name: "South & Northwest",
+          lines: [
+            "Breakfast: 7:00am-10:45am",
+            "Lunch: 11:00am-2:15pm",
+            "Dinner: 3:45pm-7:15pm",
+            "Late Night: South & Northwest are open until 10pm Sunday through Thursday"
+          ]
+        },
+        {
+          name: "Connecticut Hall, Putnam, Gelfenbien",
+          lines: [
+            "Breakfast: 7:00am-10:45am",
+            "Lunch: 11:00am-2:30pm",
+            "Dinner: 4:00pm-7:15pm",
+            "Gelfenbien & Putnam Grab & Go's",
+            "Monday-Thursday: 4:00pm-10:00pm",
+            "Friday: 4:00pm-8:00pm"
+          ]
+        },
+        {
+          name: "McMahon",
+          lines: [
+            "Breakfast: 7:00am-10:45am",
+            "Lunch: 11:00am-2:00pm",
+            "Dinner: 3:30pm-7:15pm"
+          ]
+        },
+        {
+          name: "North & Whitney",
+          lines: [
+            "Breakfast: 7:00am-10:45am",
+            "Lunch: 11:00am-3:00pm",
+            "Dinner: 3:30pm-7:15pm"
+          ]
+        }
+      ]
+    },
+    {
+      title: "Weekend Hours",
+      groups: [
+        {
+          name: "South",
+          lines: [
+            "Breakfast (Saturday): 7:00am-9:30am",
+            "Breakfast (Sunday): 8:00am-9:30am",
+            "Brunch: 9:30am-2:15pm",
+            "Dinner: 3:45pm-7:15pm",
+            "Late Night: South open until 10pm on Sunday"
+          ]
+        },
+        {
+          name: "Northwest",
+          lines: [
+            "Brunch: 10:30am-2:15pm",
+            "Dinner: 3:45pm-7:15pm",
+            "Late Night: Northwest open until 10pm on Sunday"
+          ]
+        },
+        {
+          name: "North & Whitney",
+          lines: [
+            "Brunch: 10:30am-3:00pm",
+            "Dinner: 4:30pm-7:15pm"
+          ]
+        },
+        {
+          name: "McMahon",
+          lines: [
+            "Brunch: 10:30am-2:00pm",
+            "Dinner: 3:30pm-7:15pm"
+          ]
+        },
+        {
+          name: "Gelfenbien & Putnam",
+          lines: [
+            "Brunch: 9:30am-2:30pm",
+            "Dinner: 4:00pm-7:15pm"
+          ]
+        },
+        {
+          name: "Connecticut Hall",
+          lines: [
+            "Brunch: 10:30am-2:30pm",
+            "Dinner: 4:00pm-7:15pm"
+          ]
+        }
+      ]
+    }
+  ];
+
   const cleanText = (value = "") => value.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
 
   const parsePosterDate = (titleText) => {
@@ -230,6 +325,58 @@
     return section;
   };
 
+  const createInfoPage = (ctx) => {
+    const page = ctx.createElement("div");
+    page.className = "uconn-menu-info";
+
+    const title = ctx.createElement("div");
+    title.className = "uconn-menu-info__title";
+    title.innerText = "Information";
+    page.appendChild(title);
+
+    INFO_PAGE_CONTENT.forEach((sectionData) => {
+      const section = ctx.createElement("section");
+      section.className = "uconn-menu-info__section";
+
+      const heading = ctx.createElement("div");
+      heading.className = "uconn-menu-info__section-title";
+      heading.innerText = sectionData.title;
+      section.appendChild(heading);
+
+      const grid = ctx.createElement("div");
+      grid.className = "uconn-menu-info__grid";
+
+      sectionData.groups.forEach((group) => {
+        const groupEl = ctx.createElement("div");
+        groupEl.className = "uconn-menu-info__group";
+
+        const groupTitle = ctx.createElement("div");
+        groupTitle.className = "uconn-menu-info__group-title";
+        groupTitle.innerText = group.name;
+        groupEl.appendChild(groupTitle);
+
+        group.lines.forEach((line) => {
+          const lineEl = ctx.createElement("div");
+          lineEl.className = "uconn-menu-info__line";
+          lineEl.innerText = line;
+          groupEl.appendChild(lineEl);
+        });
+
+        grid.appendChild(groupEl);
+      });
+
+      section.appendChild(grid);
+      page.appendChild(section);
+    });
+
+    const footer = ctx.createElement("div");
+    footer.className = "uconn-menu-info__footer";
+    footer.innerText = "https://dining.uconn.edu/";
+    page.appendChild(footer);
+
+    return page;
+  };
+
   const buildPoster = (data, printPoster) => {
     const overlay = document.createElement("div");
     overlay.id = OVERLAY_ID;
@@ -324,6 +471,9 @@
     overlay.appendChild(actions);
     overlay.appendChild(poster);
 
+    const infoPage = createInfoPage(overlay.ownerDocument);
+    overlay.appendChild(infoPage);
+
     overlay.addEventListener("click", (event) => {
       const target = event.target;
       if (!(target instanceof Element)) {
@@ -357,7 +507,7 @@
     const link = document.createElement("link");
     link.id = FONTS_LINK_ID;
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:ital,wght@0,400;0,600;0,700;1,500&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;1,700&display=swap";
     document.head.appendChild(link);
   };
 
