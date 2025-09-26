@@ -3,7 +3,7 @@
   const POSTER_ID = "uconn-menu-poster";
   const TRIGGER_ID = "uconn-menu-poster-trigger";
   const FONTS_LINK_ID = "uconn-menu-poster-fonts";
-  const LOGO_PATH = new URL("logo.gif", window.location.origin).href;
+  const LOGO_PATH = new URL("https://upload.wikimedia.org/wikipedia/en/thumb/5/56/University_of_Connecticut_seal.svg/1200px-University_of_Connecticut_seal.svg.png").href;
 
   const ICON_TAGS = {
     vegetarian: "Vegetarian",
@@ -235,6 +235,12 @@
     overlay.id = OVERLAY_ID;
     overlay.className = "uconn-menu-overlay";
 
+    const printButton = document.createElement("button");
+    printButton.type = "button";
+    printButton.className = "uconn-menu-overlay__print";
+    printButton.innerText = "Save / Print";
+    printButton.addEventListener("click", printPoster);
+
     const dismiss = document.createElement("button");
     dismiss.type = "button";
     dismiss.className = "uconn-menu-overlay__close";
@@ -244,6 +250,11 @@
       overlay.remove();
     });
 
+    const topActions = document.createElement("div");
+    topActions.className = "uconn-menu-overlay__top-actions";
+    topActions.appendChild(printButton);
+    topActions.appendChild(dismiss);
+
     const actions = document.createElement("div");
     actions.className = "uconn-menu-overlay__actions";
 
@@ -251,14 +262,7 @@
     instructions.className = "uconn-menu-overlay__instructions";
     instructions.innerText = "Click items to toggle suggested (green). Double-click text to edit.";
 
-    const printButton = document.createElement("button");
-    printButton.type = "button";
-    printButton.className = "uconn-menu-overlay__print";
-    printButton.innerText = "Print Poster";
-    printButton.addEventListener("click", printPoster);
-
     actions.appendChild(instructions);
-    actions.appendChild(printButton);
 
     const poster = document.createElement("div");
     poster.id = POSTER_ID;
@@ -316,7 +320,7 @@
     poster.appendChild(hall);
     poster.appendChild(grid);
 
-    overlay.appendChild(dismiss);
+    overlay.appendChild(topActions);
     overlay.appendChild(actions);
     overlay.appendChild(poster);
 
