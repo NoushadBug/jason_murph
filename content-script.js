@@ -3,6 +3,7 @@
   const POSTER_ID = "uconn-menu-poster";
   const TRIGGER_ID = "uconn-menu-poster-trigger";
   const FONTS_LINK_ID = "uconn-menu-poster-fonts";
+  const STYLESHEET_LINK_ID = "uconn-menu-poster-styles";
   const LOGO_PATH = new URL("https://upload.wikimedia.org/wikipedia/en/thumb/5/56/University_of_Connecticut_seal.svg/1200px-University_of_Connecticut_seal.svg.png").href;
 
   const ICON_TAGS = {
@@ -377,68 +378,65 @@
     return page;
   };
 
-  const buildPoster = (data, printPoster) => {
-    const overlay = document.createElement("div");
+  const buildPoster = (ctx, data, { onPrint, onClose }) => {
+    const overlay = ctx.createElement("div");
     overlay.id = OVERLAY_ID;
     overlay.className = "uconn-menu-overlay";
 
-    const printButton = document.createElement("button");
+    const printButton = ctx.createElement("button");
     printButton.type = "button";
     printButton.className = "uconn-menu-overlay__print";
     printButton.innerText = "Save / Print";
-    printButton.addEventListener("click", printPoster);
+    printButton.addEventListener("click", onPrint);
 
-    const dismiss = document.createElement("button");
+    const dismiss = ctx.createElement("button");
     dismiss.type = "button";
     dismiss.className = "uconn-menu-overlay__close";
     dismiss.innerText = "×";
-    dismiss.addEventListener("click", () => {
-      setPrintingState(false);
-      overlay.remove();
-    });
+    dismiss.addEventListener("click", onClose);
 
-    const topActions = document.createElement("div");
+    const topActions = ctx.createElement("div");
     topActions.className = "uconn-menu-overlay__top-actions";
     topActions.appendChild(printButton);
     topActions.appendChild(dismiss);
 
-    const actions = document.createElement("div");
+    const actions = ctx.createElement("div");
     actions.className = "uconn-menu-overlay__actions";
 
-    const instructions = document.createElement("div");
+    const instructions = ctx.createElement("div");
     instructions.className = "uconn-menu-overlay__instructions";
     instructions.innerText = "Click items to toggle suggested (green). Double-click text to edit.";
 
     actions.appendChild(instructions);
 
-    const poster = document.createElement("div");
+    const poster = ctx.createElement("div");
     poster.id = POSTER_ID;
     poster.className = "uconn-menu-poster";
 
-    const header = document.createElement("div");
+    const header = ctx.createElement("div");
     header.className = "uconn-menu-poster__header";
 
-    const leftLogo = document.createElement("img");
+    const leftLogo = ctx.createElement("img");
     leftLogo.src = LOGO_PATH;
     leftLogo.alt = "UConn";
     leftLogo.className = "uconn-menu-poster__logo";
 
     const rightLogo = leftLogo.cloneNode();
 
-    const headerText = document.createElement("div");
+    const headerText = ctx.createElement("div");
     headerText.className = "uconn-menu-poster__header-text";
 
-    const title = document.createElement("div");
+    const title = ctx.createElement("div");
     title.className = "uconn-menu-poster__title";
     title.innerText = "Daily Menu";
     title.setAttribute("contenteditable", "true");
 
-    const dateLine = document.createElement("div");
+    const dateLine = ctx.createElement("div");
     dateLine.className = "uconn-menu-poster__date";
     dateLine.innerText = data.menuDate.short || data.menuDate.long || "";
     dateLine.setAttribute("contenteditable", "true");
 
-    const subtitle = document.createElement("div");
+    const subtitle = ctx.createElement("div");
     subtitle.className = "uconn-menu-poster__subtitle";
     subtitle.innerHTML = "Suggested Meals in <span class=\"uconn-menu-poster__subtitle-em\">GREEN</span>";
     subtitle.setAttribute("contenteditable", "true");
@@ -451,16 +449,16 @@
     header.appendChild(headerText);
     header.appendChild(rightLogo);
 
-    const hall = document.createElement("div");
+    const hall = ctx.createElement("div");
     hall.className = "uconn-menu-poster__hall";
     hall.innerText = data.hallName || "Dining Hall";
     hall.setAttribute("contenteditable", "true");
 
-    const grid = document.createElement("div");
+    const grid = ctx.createElement("div");
     grid.className = "uconn-menu-poster__grid";
 
     data.meals.forEach((meal) => {
-      grid.appendChild(createMealColumn(poster.ownerDocument, meal));
+      grid.appendChild(createMealColumn(ctx, meal));
     });
 
     poster.appendChild(header);
@@ -471,12 +469,12 @@
     overlay.appendChild(actions);
     overlay.appendChild(poster);
 
-    const infoPage = createInfoPage(overlay.ownerDocument);
+    const infoPage = createInfoPage(ctx);
     overlay.appendChild(infoPage);
 
     overlay.addEventListener("click", (event) => {
       const target = event.target;
-      if (!(target instanceof Element)) {
+      if (!target || typeof target.closest !== "function") {
         return;
       }
 
@@ -500,61 +498,102 @@
     return overlay;
   };
 
-  const ensureFonts = () => {
-    if (document.getElementById(FONTS_LINK_ID)) {
+  const ensureFonts = (ctxDoc = document) => {
+    if (!ctxDoc?.head || ctxDoc.getElementById(FONTS_LINK_ID)) {
       return;
     }
-    const link = document.createElement("link");
+    const link = ctxDoc.createElement("link");
     link.id = FONTS_LINK_ID;
     link.rel = "stylesheet";
     link.href = "https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;600;700&display=swap";
-    document.head.appendChild(link);
+    ctxDoc.head.appendChild(link);
   };
 
-  let afterPrintCleanupAttached = false;
+  const ensureStylesheet = (ctxDoc) => {
+    if (!ctxDoc?.head || ctxDoc.getElementById(STYLESHEET_LINK_ID)) {
+      return;
+    }
+    const link = ctxDoc.createElement("link");
+    link.id = STYLESHEET_LINK_ID;
+    link.rel = "stylesheet";
+    const stylesheetURL = typeof chrome !== "undefined" && chrome.runtime?.getURL
+      ? chrome.runtime.getURL("styles/content.css")
+      : "styles/content.css";
+    link.href = stylesheetURL;
+    ctxDoc.head.appendChild(link);
+  };
 
-  const setPrintingState = (isPrinting) => {
+  const afterPrintCleanupAttached = new WeakSet();
+
+  const setPrintingState = (ctxDoc, isPrinting) => {
+    if (!ctxDoc?.body) {
+      return;
+    }
     if (isPrinting) {
-      document.body.dataset.uconnPrinting = "true";
+      ctxDoc.body.dataset.uconnPrinting = "true";
     } else {
-      delete document.body.dataset.uconnPrinting;
+      delete ctxDoc.body.dataset.uconnPrinting;
     }
   };
 
-  const ensureAfterPrintCleanup = () => {
-    if (afterPrintCleanupAttached) {
+  const ensureAfterPrintCleanup = (printWindow, ctxDoc) => {
+    if (!printWindow || afterPrintCleanupAttached.has(printWindow)) {
       return;
     }
-    window.addEventListener("afterprint", () => setPrintingState(false));
-    afterPrintCleanupAttached = true;
+    printWindow.addEventListener("afterprint", () => setPrintingState(ctxDoc, false));
+    afterPrintCleanupAttached.add(printWindow);
   };
 
-  const printPoster = () => {
-    const poster = document.getElementById(POSTER_ID);
+  const printPoster = (printWindow, ctxDoc) => {
+    const poster = ctxDoc?.getElementById(POSTER_ID);
     if (!poster) {
-      alert("Poster not ready yet. Try generating it again.");
+      (printWindow || window).alert("Poster not ready yet. Try generating it again.");
       return;
     }
 
-    ensureAfterPrintCleanup();
-    setPrintingState(true);
-    window.print();
-    window.setTimeout(() => setPrintingState(false), 1500);
+    ensureAfterPrintCleanup(printWindow || window, ctxDoc);
+    setPrintingState(ctxDoc, true);
+    (printWindow || window).focus();
+    (printWindow || window).print();
+    (printWindow || window).setTimeout(() => setPrintingState(ctxDoc, false), 1500);
   };
 
   const openPoster = () => {
-    if (document.getElementById(OVERLAY_ID)) {
-      return;
-    }
     const data = parseMenuData();
     if (!data.meals.length) {
       alert("UConn Menu Formatter: no menu data detected on this page.");
       return;
     }
 
-    ensureFonts();
-    const overlay = buildPoster(data, printPoster);
-    document.body.appendChild(overlay);
+    const previewWindow = window.open("", "_blank");
+    if (!previewWindow) {
+      alert("UConn Menu Formatter: pop-up blocked. Please allow pop-ups for this site.");
+      return;
+    }
+
+    const previewDoc = previewWindow.document;
+    previewDoc.open();
+    previewDoc.write("<!doctype html><html><head><meta charset=\"utf-8\"></head><body></body></html>");
+    previewDoc.close();
+
+    previewDoc.title = data.menuDate.long || data.hallName || "UConn Dining Menu";
+    previewDoc.body.style.margin = "0";
+
+    ensureStylesheet(previewDoc);
+    ensureFonts(previewDoc);
+
+    const closePreview = () => {
+      setPrintingState(previewDoc, false);
+      previewWindow.close();
+    };
+
+    const overlay = buildPoster(previewDoc, data, {
+      onPrint: () => printPoster(previewWindow, previewDoc),
+      onClose: closePreview
+    });
+
+    previewDoc.body.appendChild(overlay);
+    previewWindow.focus();
   };
 
   const injectTrigger = () => {

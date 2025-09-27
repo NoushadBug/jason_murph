@@ -10,5 +10,11 @@
       "css": ["styles/content.css"],
       "run_at": "document_idle"
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["styles/content.css"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
