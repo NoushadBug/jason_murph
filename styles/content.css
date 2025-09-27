@@ -23,72 +23,48 @@
   background: #0f3b94;
 }
 
-.uconn-menu-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(6, 16, 38, 0.88);
-  backdrop-filter: blur(4px);
-  z-index: 2147483600;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 16px;
-  padding: 32px;
-  box-sizing: border-box;
-  overflow-y: auto;
+body.uconn-menu-preview {
+  margin: 0;
+  background: #061026;
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
+  color: #f1f5ff;
 }
 
-.uconn-menu-overlay__top-actions {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  z-index: 1;
-}
-
-.uconn-menu-overlay__close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  font-size: 28px;
-  line-height: 1;
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.uconn-menu-overlay__close:hover {
-  background: rgba(255, 255, 255, 0.28);
-  transform: scale(1.04);
-}
-
-.uconn-menu-overlay__actions {
+.uconn-menu-document {
+  width: 100%;
+  min-height: 100vh;
+  padding: 32px 24px 48px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 24px;
 }
 
-.uconn-menu-overlay__instructions {
-  max-width: 720px;
-  text-align: center;
-  font-family: 'League Spartan', sans-serif;
-  font-size: 15px;
+.uconn-menu-toolbar {
+  width: min(92vw, 960px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   color: #f1f5ff;
+}
+
+.uconn-menu-toolbar__instructions {
+  flex: 1 1 320px;
+  font-size: 15px;
   letter-spacing: 0.02em;
 }
 
-.uconn-menu-overlay__print {
+.uconn-menu-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.uconn-menu-toolbar__button {
   border: none;
   border-radius: 999px;
   padding: 10px 20px;
@@ -96,16 +72,45 @@
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.uconn-menu-toolbar__button--primary {
   background: #4ade80;
   color: #052c23;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 12px 24px rgba(16, 185, 129, 0.35);
 }
 
-.uconn-menu-overlay__print:hover {
+.uconn-menu-toolbar__button--primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 16px 30px rgba(16, 185, 129, 0.42);
+}
+
+.uconn-menu-toolbar__button--secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(7, 27, 73, 0.25);
+}
+
+.uconn-menu-toolbar__button--secondary:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.uconn-menu-pages {
+  width: min(92vw, calc(25cm - 1.8cm));
+  max-width: calc(25cm - 1.8cm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.uconn-menu-page {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 #uconn-menu-poster {
@@ -124,10 +129,6 @@
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
   color: #111827;
-  page-break-inside: avoid;
-  break-inside: avoid;
-  page-break-after: always;
-  break-after: page;
 }
 
 .uconn-menu-poster__header {
@@ -203,8 +204,6 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  break-inside: avoid;
-  page-break-inside: avoid;
   min-height: 100%;
 }
 
@@ -230,8 +229,6 @@
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(11, 44, 106, 0.15);
   cursor: pointer;
-  break-inside: avoid;
-  page-break-inside: avoid;
 }
 
 .uconn-menu-item:last-child {
@@ -314,8 +311,6 @@
   color: #ffffff;
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
-  page-break-inside: avoid;
-  break-inside: avoid;
 }
 
 .uconn-menu-info__title {
@@ -329,8 +324,6 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  break-inside: avoid;
-  page-break-inside: avoid;
 }
 
 .uconn-menu-info__section-title {
@@ -350,8 +343,6 @@
   flex-direction: column;
   gap: 8px;
   align-items: center;
-  break-inside: avoid;
-  page-break-inside: avoid;
 }
 
 .uconn-menu-info__group-title {
@@ -418,44 +409,21 @@
   }
 }
 
-@page {
-  size: 25cm 20cm;
-  margin: 0.9cm;
+body[data-uconn-printing='true'] {
+  background: #ffffff !important;
 }
 
-body[data-uconn-printing='true'] > :not(.uconn-menu-overlay) {
-  display: none !important;
-}
-
-body[data-uconn-printing='true'] .uconn-menu-overlay {
-  background: transparent !important;
-  position: static !important;
-  display: block !important;
-  align-items: stretch !important;
-  justify-content: flex-start !important;
+body[data-uconn-printing='true'] .uconn-menu-document {
   padding: 0 !important;
-  gap: 0 !important;
+  background: transparent !important;
 }
 
-body[data-uconn-printing='true'] .uconn-menu-overlay__close,
-body[data-uconn-printing='true'] .uconn-menu-overlay__actions,
-body[data-uconn-printing='true'] .uconn-menu-overlay__top-actions,
-body[data-uconn-printing='true'] .uconn-menu-trigger {
+body[data-uconn-printing='true'] .uconn-menu-toolbar {
   display: none !important;
 }
 
-body[data-uconn-printing='true'] #uconn-menu-poster {
-  box-shadow: none !important;
-  width: calc(25cm - 1.8cm) !important;
-  min-height: calc(20cm - 1.8cm) !important;
-  margin: 0 auto !important;
-  border-width: 0.9cm !important;
-}
-
+body[data-uconn-printing='true'] #uconn-menu-poster,
 body[data-uconn-printing='true'] .uconn-menu-info {
   box-shadow: none !important;
-  width: calc(25cm - 1.8cm) !important;
-  min-height: calc(20cm - 1.8cm) !important;
   margin: 0 auto !important;
-  border-width: 0.9cm !important;
 }

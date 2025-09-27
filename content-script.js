@@ -1,5 +1,4 @@
 (() => {
-  const OVERLAY_ID = "uconn-menu-poster-overlay";
   const POSTER_ID = "uconn-menu-poster";
   const TRIGGER_ID = "uconn-menu-poster-trigger";
   const FONTS_LINK_ID = "uconn-menu-poster-fonts";
@@ -378,36 +377,9 @@
     return page;
   };
 
-  const buildPoster = (ctx, data, { onPrint, onClose }) => {
-    const overlay = ctx.createElement("div");
-    overlay.id = OVERLAY_ID;
-    overlay.className = "uconn-menu-overlay";
-
-    const printButton = ctx.createElement("button");
-    printButton.type = "button";
-    printButton.className = "uconn-menu-overlay__print";
-    printButton.innerText = "Save / Print";
-    printButton.addEventListener("click", onPrint);
-
-    const dismiss = ctx.createElement("button");
-    dismiss.type = "button";
-    dismiss.className = "uconn-menu-overlay__close";
-    dismiss.innerText = "×";
-    dismiss.addEventListener("click", onClose);
-
-    const topActions = ctx.createElement("div");
-    topActions.className = "uconn-menu-overlay__top-actions";
-    topActions.appendChild(printButton);
-    topActions.appendChild(dismiss);
-
-    const actions = ctx.createElement("div");
-    actions.className = "uconn-menu-overlay__actions";
-
-    const instructions = ctx.createElement("div");
-    instructions.className = "uconn-menu-overlay__instructions";
-    instructions.innerText = "Click items to toggle suggested (green). Double-click text to edit.";
-
-    actions.appendChild(instructions);
+  const buildPosterPage = (ctx, data) => {
+    const page = ctx.createElement("section");
+    page.className = "uconn-menu-page uconn-menu-page--poster";
 
     const poster = ctx.createElement("div");
     poster.id = POSTER_ID;
@@ -465,20 +437,11 @@
     poster.appendChild(hall);
     poster.appendChild(grid);
 
-    overlay.appendChild(topActions);
-    overlay.appendChild(actions);
-    overlay.appendChild(poster);
+    page.appendChild(poster);
 
-    const infoPage = createInfoPage(ctx);
-    overlay.appendChild(infoPage);
-
-    overlay.addEventListener("click", (event) => {
+    page.addEventListener("click", (event) => {
       const target = event.target;
       if (!target || typeof target.closest !== "function") {
-        return;
-      }
-
-      if (target.closest(".uconn-menu-overlay__close")) {
         return;
       }
 
@@ -495,7 +458,7 @@
       item.dataset.suggested = state ? "false" : "true";
     });
 
-    return overlay;
+    return page;
   };
 
   const ensureFonts = (ctxDoc = document) => {
@@ -578,6 +541,7 @@
 
     previewDoc.title = data.menuDate.long || data.hallName || "UConn Dining Menu";
     previewDoc.body.style.margin = "0";
+    previewDoc.body.classList.add("uconn-menu-preview");
 
     ensureStylesheet(previewDoc);
     ensureFonts(previewDoc);
@@ -587,12 +551,51 @@
       previewWindow.close();
     };
 
-    const overlay = buildPoster(previewDoc, data, {
-      onPrint: () => printPoster(previewWindow, previewDoc),
-      onClose: closePreview
-    });
+    const documentRoot = previewDoc.createElement("div");
+    documentRoot.className = "uconn-menu-document";
 
-    previewDoc.body.appendChild(overlay);
+    const toolbar = previewDoc.createElement("header");
+    toolbar.className = "uconn-menu-toolbar";
+
+    const instructions = previewDoc.createElement("div");
+    instructions.className = "uconn-menu-toolbar__instructions";
+    instructions.innerText = "Click items to toggle suggested (green). Double-click text to edit.";
+
+    const actions = previewDoc.createElement("div");
+    actions.className = "uconn-menu-toolbar__actions";
+
+    const printButton = previewDoc.createElement("button");
+    printButton.type = "button";
+    printButton.className = "uconn-menu-toolbar__button uconn-menu-toolbar__button--primary";
+    printButton.innerText = "Save / Print";
+    printButton.addEventListener("click", () => printPoster(previewWindow, previewDoc));
+
+    const closeButton = previewDoc.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "uconn-menu-toolbar__button uconn-menu-toolbar__button--secondary";
+    closeButton.innerText = "Close";
+    closeButton.addEventListener("click", closePreview);
+
+    actions.appendChild(printButton);
+    actions.appendChild(closeButton);
+
+    toolbar.appendChild(instructions);
+    toolbar.appendChild(actions);
+
+    const pages = previewDoc.createElement("main");
+    pages.className = "uconn-menu-pages";
+
+    const posterPage = buildPosterPage(previewDoc, data);
+    const infoPage = createInfoPage(previewDoc);
+    infoPage.classList.add("uconn-menu-page", "uconn-menu-page--info");
+
+    pages.appendChild(posterPage);
+    pages.appendChild(infoPage);
+
+    documentRoot.appendChild(toolbar);
+    documentRoot.appendChild(pages);
+
+    previewDoc.body.appendChild(documentRoot);
     previewWindow.focus();
   };
 
