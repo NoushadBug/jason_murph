@@ -130,13 +130,13 @@
 }
 
 .uconn-menu-poster__header {
-  background: #032b63;
-  border-radius: 16px;
-  padding: 24px 32px;
-  display: flex;
+  background: #001f6b;
+  border-radius: 14px;
+  padding: 24px 48px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
+  gap: 40px;
 }
 
 .uconn-menu-poster__logo {
@@ -146,32 +146,39 @@
 
 .uconn-menu-poster__header-text {
   text-align: center;
-  flex: 1;
   color: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
 }
 
 .uconn-menu-poster__title {
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
-  font-size: 56px;
-  letter-spacing: 0.08em;
+  font-size: 60px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  line-height: 1;
 }
 
 .uconn-menu-poster__date {
   font-size: 30px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  color: #ffffff;
 }
 
 .uconn-menu-poster__subtitle {
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+}
+
+.uconn-menu-poster__subtitle-em {
+  color: #22c55e;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #9fe7c4;
 }
 
 .uconn-menu-poster__hall {
@@ -368,11 +375,25 @@
   }
 
   .uconn-menu-poster__header {
-    flex-direction: column;
+    padding: 24px 32px;
+    gap: 24px;
   }
 
   .uconn-menu-poster__logo {
     width: 90px;
+  }
+
+  .uconn-menu-poster__title {
+    font-size: 48px;
+    letter-spacing: 0.1em;
+  }
+
+  .uconn-menu-poster__date {
+    font-size: 26px;
+  }
+
+  .uconn-menu-poster__subtitle {
+    font-size: 18px;
   }
 
   .uconn-menu-poster__grid {

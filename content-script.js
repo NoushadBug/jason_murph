@@ -440,7 +440,7 @@
 
     const subtitle = document.createElement("div");
     subtitle.className = "uconn-menu-poster__subtitle";
-    subtitle.innerText = "Suggested Meals in GREEN";
+    subtitle.innerHTML = "Suggested Meals in <span class=\"uconn-menu-poster__subtitle-em\">GREEN</span>";
     subtitle.setAttribute("contenteditable", "true");
 
     headerText.appendChild(title);
