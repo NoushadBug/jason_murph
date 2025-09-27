@@ -4,6 +4,9 @@
   const FONTS_LINK_ID = "uconn-menu-poster-fonts";
   const STYLESHEET_LINK_ID = "uconn-menu-poster-styles";
   const LOGO_PATH = new URL("https://upload.wikimedia.org/wikipedia/en/thumb/5/56/University_of_Connecticut_seal.svg/1200px-University_of_Connecticut_seal.svg.png").href;
+  const HTML2PDF_SCRIPT_ID = "uconn-menu-html2pdf";
+  const HTML2PDF_SCRIPT_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+  const html2PdfPromises = new WeakMap();
 
   const ICON_TAGS = {
     vegetarian: "Vegetarian",
@@ -486,7 +489,71 @@
     ctxDoc.head.appendChild(link);
   };
 
-  const afterPrintCleanupAttached = new WeakSet();
+  const ensureHtml2Pdf = (ctxWindow, ctxDoc) => {
+    if (!ctxWindow || !ctxDoc) {
+      return Promise.reject(new Error("Preview not ready"));
+    }
+
+    if (ctxWindow.html2pdf) {
+      return Promise.resolve(ctxWindow.html2pdf);
+    }
+
+    const cachedPromise = html2PdfPromises.get(ctxWindow);
+    if (cachedPromise) {
+      return cachedPromise;
+    }
+
+    const loadPromise = new Promise((resolve, reject) => {
+      const existingScript = ctxDoc.getElementById(HTML2PDF_SCRIPT_ID);
+      if (existingScript) {
+        existingScript.addEventListener(
+          "load",
+          () => {
+            if (ctxWindow.html2pdf) {
+              resolve(ctxWindow.html2pdf);
+            } else {
+              reject(new Error("html2pdf unavailable after load"));
+            }
+          },
+          { once: true }
+        );
+        existingScript.addEventListener(
+          "error",
+          () => reject(new Error("Failed to load html2pdf")),
+          { once: true }
+        );
+        return;
+      }
+
+      const script = ctxDoc.createElement("script");
+      script.id = HTML2PDF_SCRIPT_ID;
+      script.src = HTML2PDF_SCRIPT_SRC;
+      script.type = "text/javascript";
+      script.crossOrigin = "anonymous";
+      script.referrerPolicy = "no-referrer";
+      script.addEventListener(
+        "load",
+        () => {
+          if (ctxWindow.html2pdf) {
+            resolve(ctxWindow.html2pdf);
+          } else {
+            reject(new Error("html2pdf unavailable after load"));
+          }
+        },
+        { once: true }
+      );
+      script.addEventListener(
+        "error",
+        () => reject(new Error("Failed to load html2pdf")),
+        { once: true }
+      );
+      ctxDoc.head.appendChild(script);
+    });
+
+    html2PdfPromises.set(ctxWindow, loadPromise);
+    loadPromise.catch(() => html2PdfPromises.delete(ctxWindow));
+    return loadPromise;
+  };
 
   const setPrintingState = (ctxDoc, isPrinting) => {
     if (!ctxDoc?.body) {
@@ -499,26 +566,62 @@
     }
   };
 
-  const ensureAfterPrintCleanup = (printWindow, ctxDoc) => {
-    if (!printWindow || afterPrintCleanupAttached.has(printWindow)) {
-      return;
-    }
-    printWindow.addEventListener("afterprint", () => setPrintingState(ctxDoc, false));
-    afterPrintCleanupAttached.add(printWindow);
-  };
-
-  const printPoster = (printWindow, ctxDoc) => {
-    const poster = ctxDoc?.getElementById(POSTER_ID);
-    if (!poster) {
-      (printWindow || window).alert("Poster not ready yet. Try generating it again.");
+  const printPoster = async (previewWindow, ctxDoc) => {
+    const ctxWindow = previewWindow || window;
+    const target = ctxDoc?.querySelector(".uconn-menu-pages") || ctxDoc?.getElementById(POSTER_ID);
+    if (!target) {
+      ctxWindow.alert("Poster not ready yet. Try generating it again.");
       return;
     }
 
-    ensureAfterPrintCleanup(printWindow || window, ctxDoc);
     setPrintingState(ctxDoc, true);
-    (printWindow || window).focus();
-    (printWindow || window).print();
-    (printWindow || window).setTimeout(() => setPrintingState(ctxDoc, false), 1500);
+
+    try {
+      const html2pdfLib = await ensureHtml2Pdf(ctxWindow, ctxDoc);
+      if (typeof html2pdfLib !== "function") {
+        throw new Error("html2pdf not available");
+      }
+
+      const poster = ctxDoc.getElementById(POSTER_ID);
+      const hallName = poster?.querySelector(".uconn-menu-poster__hall")?.textContent?.trim();
+      const dateText = poster?.querySelector(".uconn-menu-poster__date")?.textContent?.trim();
+      const filenameParts = ["UConn Menu"];
+      if (hallName) {
+        filenameParts.push(hallName);
+      }
+      if (dateText) {
+        filenameParts.push(dateText);
+      }
+
+      const filenameBase = filenameParts.join(" - ").trim() || "UConn Menu Poster";
+      const safeFilenameBase = filenameBase
+        .replace(/[<>:"/\\|?*]+/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .slice(0, 120)
+        || "uconn-menu-poster";
+      const filename = `${safeFilenameBase}.pdf`;
+
+      const pdfOptions = {
+        margin: [0, 0, 0, 0],
+        filename,
+        pagebreak: { mode: ["css", "legacy"] },
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff"
+        },
+        jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
+      };
+
+      await html2pdfLib().set(pdfOptions).from(target).save();
+    } catch (error) {
+      ctxWindow.console?.error?.("[UConn Menu Formatter] Failed to generate PDF", error);
+      ctxWindow.alert("UConn Menu Formatter: unable to download the PDF. Please try again.");
+    } finally {
+      setPrintingState(ctxDoc, false);
+    }
   };
 
   const openPoster = () => {
@@ -545,6 +648,9 @@
 
     ensureStylesheet(previewDoc);
     ensureFonts(previewDoc);
+    ensureHtml2Pdf(previewWindow, previewDoc).catch((error) => {
+      previewWindow.console?.warn?.("[UConn Menu Formatter] html2pdf failed to preload", error);
+    });
 
     const closePreview = () => {
       setPrintingState(previewDoc, false);
@@ -567,8 +673,15 @@
     const printButton = previewDoc.createElement("button");
     printButton.type = "button";
     printButton.className = "uconn-menu-toolbar__button uconn-menu-toolbar__button--primary";
-    printButton.innerText = "Save / Print";
-    printButton.addEventListener("click", () => printPoster(previewWindow, previewDoc));
+    printButton.innerText = "Download PDF";
+    printButton.addEventListener("click", () => {
+      printButton.disabled = true;
+      printButton.classList.add("is-disabled");
+      Promise.resolve(printPoster(previewWindow, previewDoc)).finally(() => {
+        printButton.disabled = false;
+        printButton.classList.remove("is-disabled");
+      });
+    });
 
     const closeButton = previewDoc.createElement("button");
     closeButton.type = "button";
