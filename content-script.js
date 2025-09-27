@@ -507,7 +507,7 @@
     const link = document.createElement("link");
     link.id = FONTS_LINK_ID;
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;1,700&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;600;700&display=swap";
     document.head.appendChild(link);
   };
 

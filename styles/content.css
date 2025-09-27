@@ -8,7 +8,7 @@
   padding: 12px 24px;
   background: #0b2c6a;
   color: #ffffff;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'League Spartan', sans-serif;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -37,7 +37,7 @@
   padding: 32px;
   box-sizing: border-box;
   overflow-y: auto;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'League Spartan', sans-serif;
   font-weight: 700;
 }
 
@@ -82,7 +82,7 @@
 .uconn-menu-overlay__instructions {
   max-width: 720px;
   text-align: center;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'League Spartan', sans-serif;
   font-size: 15px;
   color: #f1f5ff;
   letter-spacing: 0.02em;
@@ -92,7 +92,7 @@
   border: none;
   border-radius: 999px;
   padding: 10px 20px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'League Spartan', sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -120,7 +120,7 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'League Spartan', sans-serif;
   font-weight: 700;
   color: #111827;
   page-break-inside: avoid;
@@ -154,7 +154,7 @@
 }
 
 .uconn-menu-poster__title {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'League Spartan', sans-serif;
   font-weight: 700;
   font-size: 56px;
   letter-spacing: 0.08em;
@@ -176,7 +176,7 @@
 
 .uconn-menu-poster__hall {
   text-align: center;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'League Spartan', sans-serif;
   font-weight: 700;
   font-size: 44px;
   letter-spacing: 0.06em;
@@ -202,7 +202,7 @@
 
 .uconn-menu-meal__header {
   text-align: center;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'League Spartan', sans-serif;
   font-weight: 700;
   font-size: 30px;
   letter-spacing: 0.08em;
@@ -303,7 +303,7 @@
   align-items: center;
   text-align: center;
   color: #ffffff;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'League Spartan', sans-serif;
   font-weight: 700;
   page-break-inside: avoid;
   break-inside: avoid;
