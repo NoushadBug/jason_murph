@@ -7,6 +7,17 @@
   const HTML2PDF_SCRIPT_ID = "uconn-menu-html2pdf";
   const HTML2PDF_SCRIPT_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
   const html2PdfPromises = new WeakMap();
+  const MENU_SECTION_SELECTOR = ".shortmenumeals";
+  const NUTRITION_LINK_SELECTOR = "#pg-60-3 a[href*='shortmenu.aspx']";
+  const DATE_PICKER_ID = "uconn-menu-date-picker";
+  const TRIGGER_WRAPPER_ID = "uconn-menu-trigger-wrapper";
+  const TRIGGER_BUSY_TEXT = "Generating...";
+  let triggerButton = null;
+  let isGenerating = false;
+  const domParser = typeof DOMParser !== "undefined" ? new DOMParser() : null;
+  let datePickerInput = null;
+  let selectedDateIso = null;
+  let allowedWeekRange = null;
 
   const ICON_TAGS = {
     vegetarian: "Vegetarian",
@@ -240,13 +251,14 @@
     return { name: mealName, items };
   };
 
-  const parseMenuData = () => {
-    const hallName = cleanText(document.querySelector(".headlocation")?.textContent || "");
-    const titleText = cleanText(document.querySelector(".shortmenutitle")?.textContent || "");
+  const parseMenuData = (rootDoc = document) => {
+    const scope = rootDoc || document;
+    const hallName = cleanText(scope.querySelector(".headlocation")?.textContent || "");
+    const titleText = cleanText(scope.querySelector(".shortmenutitle")?.textContent || "");
     const menuDate = parsePosterDate(titleText);
 
     const meals = [];
-    document.querySelectorAll(".shortmenumeals").forEach((mealEl) => {
+    scope.querySelectorAll(".shortmenumeals").forEach((mealEl) => {
       const meal = parseMealColumn(mealEl);
       if (meal) {
         meals.push(meal);
@@ -258,6 +270,195 @@
       menuDate,
       meals
     };
+  };
+
+  const getCurrentWeekRange = () => {
+    const today = new Date();
+    const start = new Date(today);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - start.getDay());
+
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+
+    return { start, end };
+  };
+
+  const formatDateToIso = (date) => {
+    if (!(date instanceof Date) || Number.isNaN(date.valueOf())) {
+      return "";
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const isIsoDateWithinRange = (isoDate, range) => {
+    if (!isoDate || !range?.start || !range?.end) {
+      return false;
+    }
+    const probe = new Date(`${isoDate}T00:00:00`);
+    if (Number.isNaN(probe.valueOf())) {
+      return false;
+    }
+    return probe >= range.start && probe <= range.end;
+  };
+
+  const formatIsoDateForQuery = (isoDate) => {
+    if (!isoDate) {
+      return null;
+    }
+    const [year, month, day] = isoDate.split("-");
+    if (!year || !month || !day) {
+      return null;
+    }
+    const numericMonth = Number.parseInt(month, 10);
+    const numericDay = Number.parseInt(day, 10);
+    if (Number.isNaN(numericMonth) || Number.isNaN(numericDay)) {
+      return null;
+    }
+    return `${numericMonth}/${numericDay}/${year}`;
+  };
+
+  const normalizeUrl = (href) => {
+    if (!href) {
+      return null;
+    }
+    try {
+      return new URL(href, document.baseURI).href;
+    } catch (error) {
+      console.warn("[UConn Menu Formatter] Skipping invalid URL", href, error);
+      return null;
+    }
+  };
+
+  const applySelectedDateToUrl = (url) => {
+    if (!url || !selectedDateIso) {
+      return url;
+    }
+    const queryDate = formatIsoDateForQuery(selectedDateIso);
+    if (!queryDate) {
+      return url;
+    }
+    try {
+      const urlObj = new URL(url);
+      urlObj.searchParams.set("dtdate", queryDate);
+      return urlObj.toString();
+    } catch (error) {
+      console.warn("[UConn Menu Formatter] Unable to apply date to URL", url, error);
+      return url;
+    }
+  };
+
+  const collectNutritionMenuLinks = () => {
+    return Array.from(document.querySelectorAll(NUTRITION_LINK_SELECTOR))
+      .filter((anchor) => {
+        const label = cleanText(anchor.textContent || anchor.innerText || "");
+        return label.toUpperCase() !== "EVERYDAY ITEMS";
+      })
+      .map((anchor) => normalizeUrl(anchor.getAttribute("href")))
+      .filter((href, index, arr) => href && arr.indexOf(href) === index);
+  };
+
+  const sendBackgroundFetch = (url) => {
+    if (typeof chrome === "undefined" || !chrome.runtime?.id || !chrome.runtime?.sendMessage) {
+      return Promise.reject(new Error("extension messaging unavailable"));
+    }
+
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: "uconn-menu-fetch", url }, (response) => {
+        const lastError = chrome.runtime.lastError;
+        if (lastError) {
+          reject(new Error(lastError.message || "Messaging failed"));
+          return;
+        }
+        if (!response) {
+          reject(new Error("Empty response from background"));
+          return;
+        }
+        if (response.success && typeof response.html === "string") {
+          resolve(response.html);
+        } else {
+          reject(new Error(response.error || "Background fetch failed"));
+        }
+      });
+    });
+  };
+
+  const fetchMenuHtml = async (url) => {
+    try {
+      return await sendBackgroundFetch(url);
+    } catch (error) {
+      console.warn("[UConn Menu Formatter] Background fetch failed, retrying in-page", url, error);
+    }
+
+    try {
+      const response = await fetch(url, { credentials: "include" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return await response.text();
+    } catch (error) {
+      throw new Error(`Failed to load menu (${error.message || error})`);
+    }
+  };
+
+  const fetchMenuDocument = async (url) => {
+    if (!domParser) {
+      throw new Error("DOMParser unavailable");
+    }
+    const html = await fetchMenuHtml(url);
+    return domParser.parseFromString(html, "text/html");
+  };
+
+  const gatherNutritionMenus = async () => {
+    const links = collectNutritionMenuLinks();
+    if (!links.length) {
+      return { menus: [], errors: [] };
+    }
+
+    const errors = [];
+    const results = await Promise.all(
+      links.map(async (originalUrl) => {
+        const url = applySelectedDateToUrl(originalUrl);
+        try {
+          const menuDoc = await fetchMenuDocument(url);
+          const data = parseMenuData(menuDoc);
+          if (!data.meals.length) {
+            throw new Error("no menu data detected");
+          }
+          return data;
+        } catch (error) {
+          errors.push({ url, error });
+          return null;
+        }
+      })
+    );
+
+    return {
+      menus: results.filter(Boolean),
+      errors
+    };
+  };
+
+  const setTriggerState = (state) => {
+    if (!triggerButton) {
+      return;
+    }
+    if (state === "busy") {
+      if (!triggerButton.dataset.originalText) {
+        triggerButton.dataset.originalText = triggerButton.innerText;
+      }
+      triggerButton.disabled = true;
+      triggerButton.innerText = TRIGGER_BUSY_TEXT;
+      triggerButton.classList.add("is-loading");
+    } else {
+      triggerButton.disabled = false;
+      triggerButton.innerText = triggerButton.dataset.originalText || "Generate Poster";
+      triggerButton.classList.remove("is-loading");
+    }
   };
 
   const createMealColumn = (ctx, meal) => {
@@ -380,13 +581,16 @@
     return page;
   };
 
-  const buildPosterPage = (ctx, data) => {
+  const buildPosterPage = (ctx, data, options = {}) => {
+    const { assignId = false } = options;
     const page = ctx.createElement("section");
     page.className = "uconn-menu-page uconn-menu-page--poster";
 
     const poster = ctx.createElement("div");
-    poster.id = POSTER_ID;
     poster.className = "uconn-menu-poster";
+    if (assignId) {
+      poster.id = POSTER_ID;
+    }
 
     const header = ctx.createElement("div");
     header.className = "uconn-menu-poster__header";
@@ -624,17 +828,11 @@
     }
   };
 
-  const openPoster = () => {
-    const data = parseMenuData();
-    if (!data.meals.length) {
-      alert("UConn Menu Formatter: no menu data detected on this page.");
-      return;
-    }
-
+  const renderPreview = (menuDataList, options = {}) => {
+    const { errors = [] } = options;
     const previewWindow = window.open("", "_blank");
     if (!previewWindow) {
-      alert("UConn Menu Formatter: pop-up blocked. Please allow pop-ups for this site.");
-      return;
+      throw new Error("pop-up blocked. Please allow pop-ups for this site.");
     }
 
     const previewDoc = previewWindow.document;
@@ -642,7 +840,17 @@
     previewDoc.write("<!doctype html><html><head><meta charset=\"utf-8\"></head><body></body></html>");
     previewDoc.close();
 
-    previewDoc.title = data.menuDate.long || data.hallName || "UConn Dining Menu";
+    const firstMenu = menuDataList[0];
+    const hallNames = menuDataList.map((item) => item.hallName).filter(Boolean);
+    const uniqueHallNames = hallNames.filter((value, index, arr) => arr.indexOf(value) === index);
+    const titleParts = [];
+    if (uniqueHallNames.length) {
+      titleParts.push(uniqueHallNames.join(", "));
+    }
+    if (firstMenu?.menuDate?.long) {
+      titleParts.push(firstMenu.menuDate.long);
+    }
+    previewDoc.title = titleParts.length ? titleParts.join(" | ") : "UConn Dining Menu";
     previewDoc.body.style.margin = "0";
     previewDoc.body.classList.add("uconn-menu-preview");
 
@@ -698,11 +906,13 @@
     const pages = previewDoc.createElement("main");
     pages.className = "uconn-menu-pages";
 
-    const posterPage = buildPosterPage(previewDoc, data);
+    menuDataList.forEach((menuData, index) => {
+      const posterPage = buildPosterPage(previewDoc, menuData, { assignId: index === 0 });
+      pages.appendChild(posterPage);
+    });
+
     const infoPage = createInfoPage(previewDoc);
     infoPage.classList.add("uconn-menu-page", "uconn-menu-page--info");
-
-    pages.appendChild(posterPage);
     pages.appendChild(infoPage);
 
     documentRoot.appendChild(toolbar);
@@ -710,25 +920,174 @@
 
     previewDoc.body.appendChild(documentRoot);
     previewWindow.focus();
+
+    if (errors.length) {
+      const errorMessage = errors
+        .map((entry) => `${entry.url}: ${entry.error?.message || entry.error || "unknown error"}`)
+        .join("\n");
+      previewWindow.console?.warn?.("[UConn Menu Formatter] Some menus failed to load", errorMessage);
+      setTimeout(() => {
+        const message = `UConn Menu Formatter: some menus could not be loaded.\n\n${errorMessage}`;
+        if (previewWindow.closed) {
+          alert(message);
+        } else {
+          previewWindow.alert(message);
+        }
+      }, 250);
+    }
   };
 
-  const injectTrigger = () => {
-    if (document.getElementById(TRIGGER_ID)) {
+  const openPoster = async () => {
+    if (isGenerating) {
       return;
     }
 
-    const button = document.createElement("button");
-    button.id = TRIGGER_ID;
-    button.type = "button";
-    button.innerText = "Generate Poster";
-    button.className = "uconn-menu-trigger";
-    button.addEventListener("click", openPoster);
+    const isMenuPage = Boolean(document.querySelector(MENU_SECTION_SELECTOR));
+    isGenerating = true;
+    setTriggerState("busy");
 
-    document.body.appendChild(button);
+    try {
+      if (isMenuPage) {
+        const currentUrl = window.location?.href;
+        const targetUrl = applySelectedDateToUrl(currentUrl);
+        let data;
+        if (targetUrl && targetUrl !== currentUrl) {
+          const menuDoc = await fetchMenuDocument(targetUrl);
+          data = parseMenuData(menuDoc);
+        } else {
+          data = parseMenuData(document);
+        }
+        if (!data.meals.length) {
+          throw new Error("no menu data detected on this page.");
+        }
+        renderPreview([data]);
+        return;
+      }
+
+      const { menus, errors } = await gatherNutritionMenus();
+      if (!menus.length) {
+        const message = errors.length
+          ? `${errors.length} menu${errors.length === 1 ? "" : "s"} failed to load.`
+          : "no links detected on this page.";
+        throw new Error(`Unable to prepare menus: ${message}`);
+      }
+
+      renderPreview(menus, { errors });
+    } catch (error) {
+      alert(`UConn Menu Formatter: ${error.message || error}`);
+    } finally {
+      isGenerating = false;
+      setTriggerState("idle");
+    }
+  };
+
+  const handleDateChange = (event) => {
+    const value = (event.target?.value || "").trim();
+    if (!value) {
+      event.target.value = selectedDateIso || "";
+      return;
+    }
+
+    if (!isIsoDateWithinRange(value, allowedWeekRange)) {
+      event.target.value = selectedDateIso || "";
+      const startIso = formatDateToIso(allowedWeekRange?.start);
+      const endIso = formatDateToIso(allowedWeekRange?.end);
+      const friendlyRange = startIso && endIso ? `${startIso} to ${endIso}` : "this week";
+      alert(`UConn Menu Formatter: please pick a date within ${friendlyRange}.`);
+      return;
+    }
+
+    selectedDateIso = value;
+  };
+
+  const ensureDatePicker = () => {
+    if (datePickerInput && document.getElementById(DATE_PICKER_ID)) {
+      return;
+    }
+
+    allowedWeekRange = getCurrentWeekRange();
+    const previousSelection = selectedDateIso;
+    const todayIso = formatDateToIso(new Date());
+    const fallbackIso = formatDateToIso(allowedWeekRange.start);
+    if (!previousSelection || !isIsoDateWithinRange(previousSelection, allowedWeekRange)) {
+      if (isIsoDateWithinRange(todayIso, allowedWeekRange)) {
+        selectedDateIso = todayIso;
+      } else {
+        selectedDateIso = fallbackIso;
+      }
+    }
+
+    const existingInput = document.getElementById(DATE_PICKER_ID);
+    if (existingInput) {
+      datePickerInput = existingInput;
+    } else {
+      datePickerInput = document.createElement("input");
+      datePickerInput.type = "date";
+      datePickerInput.id = DATE_PICKER_ID;
+      datePickerInput.className = "uconn-menu-trigger__date-input";
+      datePickerInput.addEventListener("change", handleDateChange);
+    }
+
+    const minIso = formatDateToIso(allowedWeekRange.start);
+    const maxIso = formatDateToIso(allowedWeekRange.end);
+    if (minIso) {
+      datePickerInput.min = minIso;
+    }
+    if (maxIso) {
+      datePickerInput.max = maxIso;
+    }
+    if (selectedDateIso) {
+      datePickerInput.value = selectedDateIso;
+    }
+  };
+
+  const injectTrigger = () => {
+    ensureDatePicker();
+
+    let wrapper = document.getElementById(TRIGGER_WRAPPER_ID);
+    if (!wrapper) {
+      wrapper = document.createElement("div");
+      wrapper.id = TRIGGER_WRAPPER_ID;
+      wrapper.className = "uconn-menu-trigger-wrapper";
+      document.body.appendChild(wrapper);
+    }
+
+    let label = wrapper.querySelector(".uconn-menu-trigger__date-label");
+    if (!label) {
+      label = document.createElement("label");
+      label.setAttribute("for", DATE_PICKER_ID);
+      label.className = "uconn-menu-trigger__date-label";
+      label.innerText = "Menu date";
+      wrapper.appendChild(label);
+    }
+
+    if (datePickerInput.parentElement !== label) {
+      label.appendChild(datePickerInput);
+    }
+
+    let button = document.getElementById(TRIGGER_ID);
+    if (!button) {
+      button = document.createElement("button");
+      button.id = TRIGGER_ID;
+      button.type = "button";
+      button.innerText = "Generate Poster";
+      button.className = "uconn-menu-trigger";
+      button.dataset.originalText = button.innerText;
+      button.addEventListener("click", () => {
+        openPoster();
+      });
+    } else if (!button.dataset.originalText) {
+      button.dataset.originalText = button.innerText;
+    }
+
+    if (!wrapper.contains(button)) {
+      wrapper.appendChild(button);
+    }
+    triggerButton = button;
   };
 
   const bootstrap = () => {
-    if (!document.querySelector(".shortmenumeals")) {
+    if (!document.querySelector(MENU_SECTION_SELECTOR) && collectNutritionMenuLinks().length === 0) {
       return;
     }
     injectTrigger();

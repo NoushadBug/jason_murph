@@ -5,12 +5,19 @@
   "version": "0.1.0",
   "content_scripts": [
     {
-      "matches": ["https://nutritionanalysis.dds.uconn.edu/shortmenu.aspx*"],
+      "matches": [
+        "https://nutritionanalysis.dds.uconn.edu/shortmenu.aspx*",
+        "https://dining.uconn.edu/nutrition/*"
+      ],
       "js": ["content-script.js"],
       "css": ["styles/content.css"],
       "run_at": "document_idle"
     }
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["https://nutritionanalysis.dds.uconn.edu/*"],
   "web_accessible_resources": [
     {
       "resources": ["styles/content.css"],
