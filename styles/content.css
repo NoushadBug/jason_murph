@@ -32,6 +32,7 @@
 }
 
 .uconn-menu-trigger__date-label {
+  align-items: center;
   display: flex;
   flex-direction: column;
   align-items: flex-end;

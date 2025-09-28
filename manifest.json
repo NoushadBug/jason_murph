@@ -3,6 +3,20 @@
   "name": "UConn Dining Menu Formatter",
   "description": "Transforms UConn dining short menu pages into a printable poster that mimics the Canva layout.",
   "version": "0.1.0",
+  "icons": {
+    "16": "images/icon16.png",
+    "32": "images/icon32.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "images/icon16.png",
+      "32": "images/icon32.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
   "content_scripts": [
     {
       "matches": [
@@ -20,7 +34,10 @@
   "host_permissions": ["https://nutritionanalysis.dds.uconn.edu/*"],
   "web_accessible_resources": [
     {
-      "resources": ["styles/content.css"],
+      "resources": [
+        "styles/content.css",
+        "images/logo.png"
+      ],
       "matches": ["<all_urls>"]
     }
   ]

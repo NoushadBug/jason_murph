@@ -3,7 +3,15 @@
   const TRIGGER_ID = "uconn-menu-poster-trigger";
   const FONTS_LINK_ID = "uconn-menu-poster-fonts";
   const STYLESHEET_LINK_ID = "uconn-menu-poster-styles";
-  const LOGO_PATH = new URL("https://upload.wikimedia.org/wikipedia/en/thumb/5/56/University_of_Connecticut_seal.svg/1200px-University_of_Connecticut_seal.svg.png").href;
+  const LOGO_PATH = (() => {
+    if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.getURL === "function") {
+      return chrome.runtime.getURL("images/logo.png");
+    }
+    if (typeof browser !== "undefined" && browser.runtime && typeof browser.runtime.getURL === "function") {
+      return browser.runtime.getURL("images/logo.png");
+    }
+    return "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/University_of_Connecticut_seal.svg/1200px-University_of_Connecticut_seal.svg.png";
+  })();
   const HTML2PDF_SCRIPT_ID = "uconn-menu-html2pdf";
   const HTML2PDF_SCRIPT_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
   const html2PdfPromises = new WeakMap();
