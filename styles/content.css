@@ -155,7 +155,8 @@ body.uconn-menu-preview {
   justify-content: center;
 }
 
-#uconn-menu-poster {
+#uconn-menu-poster,
+.uconn-menu-poster {
   width: min(92vw, calc(25cm - 1.8cm));
   max-width: calc(25cm - 1.8cm);
   min-height: calc(20cm - 1.8cm);
@@ -404,7 +405,8 @@ body.uconn-menu-preview {
 }
 
 @media (max-width: 1024px) {
-  #uconn-menu-poster {
+  #uconn-menu-poster,
+  .uconn-menu-poster {
     padding: 32px 28px;
     width: min(92vw, 900px);
   }
@@ -465,6 +467,7 @@ body[data-uconn-printing='true'] .uconn-menu-toolbar {
 }
 
 body[data-uconn-printing='true'] #uconn-menu-poster,
+body[data-uconn-printing='true'] .uconn-menu-poster,
 body[data-uconn-printing='true'] .uconn-menu-info {
   box-shadow: none !important;
   margin: 0 auto !important;
