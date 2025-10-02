@@ -21,14 +21,14 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
-  box-shadow: 0 12px 30px rgba(7, 27, 73, 0.35);
+  box-shadow: 0 12px 30px rgba(15, 39, 85, 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .uconn-menu-trigger:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 34px rgba(7, 27, 73, 0.4);
-  background: #0f3b94;
+  box-shadow: 0 16px 34px rgba(15, 39, 85, 0.4);
+  background: #1f2937;
 }
 
 .uconn-menu-trigger__date-label {
@@ -45,7 +45,7 @@
   background: rgba(255, 255, 255, 0.92);
   padding: 10px 16px;
   border-radius: 999px;
-  box-shadow: 0 8px 22px rgba(7, 27, 73, 0.18);
+  box-shadow: 0 8px 22px rgba(15, 39, 85, 0.18);
 }
 
 .uconn-menu-trigger__date-input {
@@ -67,10 +67,10 @@
 
 body.uconn-menu-preview {
   margin: 0;
-  background: #061026;
+  background: #1f2937;
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
-  color: #f1f5ff;
+  color: #ffffff;
 }
 
 .uconn-menu-document {
@@ -95,11 +95,11 @@ body.uconn-menu-preview {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: rgba(11, 44, 106, 0.8);
+  background: rgba(11, 44, 106, 0.85);
   backdrop-filter: blur(8px);
   padding: 12px 20px;
   border-radius: 16px;
-  color: #f1f5ff;
+  color: #ffffff;
 }
 
 .uconn-menu-toolbar__font-controls {
@@ -163,20 +163,20 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-toolbar__button--primary {
-  background: #4ade80;
-  color: #052c23;
-  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.35);
+  background: #22c55e;
+  color: #0f7760;
+  box-shadow: 0 12px 24px rgba(34, 197, 94, 0.35);
 }
 
 .uconn-menu-toolbar__button--primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 16px 30px rgba(16, 185, 129, 0.42);
+  box-shadow: 0 16px 30px rgba(34, 197, 94, 0.42);
 }
 
 .uconn-menu-toolbar__button--secondary {
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  box-shadow: 0 12px 24px rgba(7, 27, 73, 0.25);
+  box-shadow: 0 12px 24px rgba(15, 39, 85, 0.25);
 }
 
 .uconn-menu-toolbar__button--secondary:hover {
@@ -224,7 +224,7 @@ body.uconn-menu-preview {
   gap: max(12px, calc(28px - var(--uconn-space-mod-lg)));
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
-  color: #111827;
+  color: #1f2937;
 }
 
 @media print {
@@ -236,7 +236,7 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-poster__header {
-  background: #001f6b;
+  background: #0b2c6a;
   border-radius: 0;
   padding: max(8px, calc(20px - var(--uconn-space-mod-md))) max(16px, calc(40px - var(--uconn-space-mod-lg)));
   display: grid;
@@ -324,20 +324,19 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-meal__items {
-  /* Use multi-column layout so items flow into columns inside each meal.
-     This helps pack more items vertically and keeps the poster to a single page. */
-  display: block;
-  column-count: 2;
-  column-gap: max(6px, calc(16px - var(--uconn-space-mod-md)));
-  /* fallback spacing between items when columns are not used */
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: max(6px, calc(16px - var(--uconn-space-mod-md)));
+}
+
+.uconn-menu-meal__column {
+  display: flex;
+  flex-direction: column;
   gap: max(2px, calc(10px - var(--uconn-space-mod-sm)));
 }
 
 .uconn-menu-item {
-  /* Make each item an inline-block so it becomes an atomic block inside columns
-     and won't be split across columns. Also ensure it doesn't break inside a column. */
-  display: inline-block;
-  width: 100%;
+  display: block;
   padding-bottom: max(0px, calc(10px - var(--uconn-space-mod-sm)));
   border-bottom: max(0px, calc(1px - (var(--uconn-space-mod) / 24))) solid rgba(11, 44, 106, 0.15);
   position: relative;
@@ -358,9 +357,6 @@ body.uconn-menu-preview {
   color: rgba(11, 44, 106, 0.78);
   margin-top: max(2px, calc(12px - var(--uconn-space-mod-md)));
   margin-bottom: max(0px, calc(4px - var(--uconn-space-mod-xs)));
-  /* Make category labels span across all columns so they act as section headers */
-  column-span: all;
-  -webkit-column-span: all;
   break-inside: avoid;
 }
 
@@ -377,7 +373,7 @@ body.uconn-menu-preview {
 
 .uconn-menu-item__note {
   font-size: calc(13px + var(--uconn-font-scale-mod));
-  color: #4b5563;
+  color: rgba(31, 41, 55, 0.75);
   font-style: italic;
   font-weight: 700;
   margin-top: max(0px, calc(4px - var(--uconn-space-mod-xs)));
@@ -400,26 +396,26 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-item[data-suggested='true'] .uconn-menu-item__title {
-  color: #008c5a;
+  color: #0f7760;
   text-shadow: 0 0 0.01px currentColor;
 }
 
 .uconn-menu-item[data-suggested='true'] {
-  border-color: rgba(0, 140, 90, 0.4);
+  border-color: rgba(15, 119, 96, 0.4);
 }
 
 .uconn-menu-item[data-suggested='true'] .uconn-menu-item__tags {
-  color: #008c5a;
+  color: #0f7760;
 }
 
 .uconn-menu-info {
   width: min(92vw, calc(25cm - 1.8cm));
   max-width: calc(25cm - 1.8cm);
   min-height: calc(20cm - 1.8cm);
-  background: #032b63;
-  border: 26px solid #021f58;
+  background: #0b2c6a;
+  border: 26px solid #1f2937;
   border-radius: 22px;
-  box-shadow: 0 30px 60px rgba(5, 18, 43, 0.35);
+  box-shadow: 0 30px 60px rgba(15, 39, 85, 0.35);
   box-sizing: border-box;
   padding: 48px 64px;
   display: flex;
@@ -532,8 +528,8 @@ body.uconn-menu-preview {
 /* Ensure columns collapse to a single column on narrow previews and for print tools that don't support columns well */
 @media (max-width: 720px), print {
   .uconn-menu-meal__items {
-    column-count: 1 !important;
-    column-gap: 0 !important;
+    grid-template-columns: 1fr !important;
+    gap: max(2px, calc(10px - var(--uconn-space-mod-sm))) !important;
   }
 }
 
