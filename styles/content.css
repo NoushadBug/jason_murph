@@ -86,16 +86,59 @@ body.uconn-menu-preview {
 
 .uconn-menu-toolbar {
   width: min(92vw, 960px);
+  position: sticky;
+  top: 16px;
+  z-index: 100;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  background: rgba(11, 44, 106, 0.8);
+  backdrop-filter: blur(8px);
+  padding: 12px 20px;
+  border-radius: 16px;
   color: #f1f5ff;
 }
 
+.uconn-menu-toolbar__font-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.uconn-menu-toolbar__font-controls .uconn-menu-toolbar__button {
+  padding: 6px 14px;
+  min-width: 36px;
+}
+
+.uconn-menu-toolbar__color-palette {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 6px;
+}
+
+.uconn-menu-toolbar__color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.uconn-menu-toolbar__color-swatch:hover {
+  transform: scale(1.1);
+}
+
 .uconn-menu-toolbar__instructions {
-  flex: 1 1 320px;
+  flex: 1 1 280px;
   font-size: 15px;
   letter-spacing: 0.02em;
 }
@@ -103,7 +146,7 @@ body.uconn-menu-preview {
 .uconn-menu-toolbar__actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .uconn-menu-toolbar__button {
@@ -141,6 +184,7 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-pages {
+  --uconn-font-scale-mod: 0px;
   width: min(92vw, calc(25cm - 1.8cm));
   max-width: calc(25cm - 1.8cm);
   display: flex;
@@ -153,6 +197,7 @@ body.uconn-menu-preview {
   width: 100%;
   display: flex;
   justify-content: center;
+  page-break-after: always;
 }
 
 #uconn-menu-poster,
@@ -201,21 +246,21 @@ body.uconn-menu-preview {
 .uconn-menu-poster__title {
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
-  font-size: 60px;
+  font-size: calc(60px + var(--uconn-font-scale-mod));
   letter-spacing: 0.12em;
   text-transform: uppercase;
   line-height: 1;
 }
 
 .uconn-menu-poster__date {
-  font-size: 30px;
+  font-size: calc(30px + var(--uconn-font-scale-mod));
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #ffffff;
 }
 
 .uconn-menu-poster__subtitle {
-  font-size: 20px;
+  font-size: calc(20px + var(--uconn-font-scale-mod));
   font-weight: 600;
   letter-spacing: 0.08em;
   color: #ffffff;
@@ -230,7 +275,7 @@ body.uconn-menu-preview {
   text-align: center;
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
-  font-size: 44px;
+  font-size: calc(44px + var(--uconn-font-scale-mod));
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #0b2c6a;
@@ -254,7 +299,7 @@ body.uconn-menu-preview {
   text-align: center;
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
-  font-size: 30px;
+  font-size: calc(30px + var(--uconn-font-scale-mod));
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #0b2c6a;
@@ -271,7 +316,7 @@ body.uconn-menu-preview {
 .uconn-menu-item {
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(11, 44, 106, 0.15);
-  cursor: pointer;
+  position: relative;
 }
 
 .uconn-menu-item:last-child {
@@ -279,7 +324,7 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-item__category {
-  font-size: 12px;
+  font-size: calc(12px + var(--uconn-font-scale-mod));
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -293,14 +338,14 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-item__title {
-  font-size: 20px;
+  font-size: calc(20px + var(--uconn-font-scale-mod));
   font-weight: 700;
   color: #1f2937;
   line-height: 1.35;
 }
 
 .uconn-menu-item__note {
-  font-size: 13px;
+  font-size: calc(13px + var(--uconn-font-scale-mod));
   color: #4b5563;
   font-style: italic;
   font-weight: 700;
@@ -308,7 +353,7 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-item__allergens {
-  font-size: 13px;
+  font-size: calc(13px + var(--uconn-font-scale-mod));
   color: #d93030;
   font-weight: 700;
   margin-top: 6px;
@@ -316,7 +361,7 @@ body.uconn-menu-preview {
 
 .uconn-menu-item__tags {
   margin-top: 6px;
-  font-size: 12px;
+  font-size: calc(12px + var(--uconn-font-scale-mod));
   font-weight: 700;
   color: #0f7760;
   text-transform: uppercase;
@@ -357,7 +402,7 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-info__title {
-  font-size: 60px;
+  font-size: calc(60px + var(--uconn-font-scale-mod));
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -370,7 +415,7 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-info__section-title {
-  font-size: 26px;
+  font-size: calc(26px + var(--uconn-font-scale-mod));
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -389,18 +434,18 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-info__group-title {
-  font-size: 18px;
+  font-size: calc(18px + var(--uconn-font-scale-mod));
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .uconn-menu-info__line {
-  font-size: 16px;
+  font-size: calc(16px + var(--uconn-font-scale-mod));
   letter-spacing: 0.03em;
 }
 
 .uconn-menu-info__footer {
-  font-size: 18px;
+  font-size: calc(18px + var(--uconn-font-scale-mod));
   letter-spacing: 0.1em;
 }
 
@@ -421,16 +466,16 @@ body.uconn-menu-preview {
   }
 
   .uconn-menu-poster__title {
-    font-size: 48px;
+    font-size: calc(48px + var(--uconn-font-scale-mod));
     letter-spacing: 0.1em;
   }
 
   .uconn-menu-poster__date {
-    font-size: 26px;
+    font-size: calc(26px + var(--uconn-font-scale-mod));
   }
 
   .uconn-menu-poster__subtitle {
-    font-size: 18px;
+    font-size: calc(18px + var(--uconn-font-scale-mod));
   }
 
   .uconn-menu-poster__grid {
@@ -449,7 +494,7 @@ body.uconn-menu-preview {
   }
 
   .uconn-menu-info__title {
-    font-size: 44px;
+    font-size: calc(44px + var(--uconn-font-scale-mod));
   }
 }
 
@@ -466,9 +511,16 @@ body[data-uconn-printing='true'] .uconn-menu-toolbar {
   display: none !important;
 }
 
+body[data-uconn-printing='true'] .uconn-menu-page {
+  display: block;
+  page-break-inside: avoid;
+  page-break-after: always;
+}
+
 body[data-uconn-printing='true'] #uconn-menu-poster,
 body[data-uconn-printing='true'] .uconn-menu-poster,
 body[data-uconn-printing='true'] .uconn-menu-info {
   box-shadow: none !important;
   margin: 0 auto !important;
+  border: none !important;
 }

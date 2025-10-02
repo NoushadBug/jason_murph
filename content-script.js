@@ -12,7 +12,7 @@
     }
     return "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/University_of_Connecticut_seal.svg/1200px-University_of_Connecticut_seal.svg.png";
   })();
-  const HTML2PDF_SCRIPT_ID = "uconn-menu-html2pdf";
+  const HTML2PDF_SCRIPT_ID = "uconn-menu-html2pdf-script";
   const HTML2PDF_SCRIPT_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
   const html2PdfPromises = new WeakMap();
   const MENU_SECTION_SELECTOR = ".shortmenumeals";
@@ -39,6 +39,13 @@
     shellfish: "Shellfish",
     eggs: "Eggs",
     dairy: "Dairy"
+  };
+
+  const HIGHLIGHT_COLORS = {
+    green: "#008c5a",
+    blue: "#0052a5",
+    white: "#ffffff",
+    black: "#111827"
   };
 
   const INFO_PAGE_CONTENT = [
@@ -654,25 +661,6 @@
 
     page.appendChild(poster);
 
-    page.addEventListener("click", (event) => {
-      const target = event.target;
-      if (!target || typeof target.closest !== "function") {
-        return;
-      }
-
-      const item = target.closest(".uconn-menu-item");
-      if (!item) {
-        return;
-      }
-
-      if (target.closest("[contenteditable='true']")) {
-        return;
-      }
-
-      const state = item.dataset.suggested === "true";
-      item.dataset.suggested = state ? "false" : "true";
-    });
-
     return page;
   };
 
@@ -780,8 +768,8 @@
 
   const printPoster = async (previewWindow, ctxDoc) => {
     const ctxWindow = previewWindow || window;
-    const target = ctxDoc?.querySelector(".uconn-menu-pages") || ctxDoc?.getElementById(POSTER_ID);
-    if (!target) {
+    const pagesContainer = ctxDoc?.querySelector(".uconn-menu-pages");
+    if (!pagesContainer) {
       ctxWindow.alert("Poster not ready yet. Try generating it again.");
       return;
     }
@@ -795,18 +783,8 @@
       }
 
       const poster = ctxDoc.getElementById(POSTER_ID);
-      const hallName = poster?.querySelector(".uconn-menu-poster__hall")?.textContent?.trim();
-      const dateText = poster?.querySelector(".uconn-menu-poster__date")?.textContent?.trim();
-      const filenameParts = ["UConn Menu"];
-      if (hallName) {
-        filenameParts.push(hallName);
-      }
-      if (dateText) {
-        filenameParts.push(dateText);
-      }
-
-      const filenameBase = filenameParts.join(" - ").trim() || "UConn Menu Poster";
-      const safeFilenameBase = filenameBase
+      const dateText = poster?.querySelector(".uconn-menu-poster__date")?.textContent?.trim() || "menu";
+      const safeFilenameBase = `UConn-Dining-Menus-${dateText}`
         .replace(/[<>:"/\\|?*]+/g, "")
         .replace(/\s+/g, "-")
         .replace(/-+/g, "-")
@@ -815,19 +793,20 @@
       const filename = `${safeFilenameBase}.pdf`;
 
       const pdfOptions = {
-        margin: [0, 0, 0, 0],
+        margin: 0,
         filename,
-        pagebreak: { mode: ["css", "legacy"] },
+        pagebreak: { mode: ["css", "avoid-all"] },
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: {
           scale: 2,
           useCORS: true,
-          backgroundColor: "#ffffff"
+          backgroundColor: null,
+          logging: false
         },
         jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
       };
 
-      await html2pdfLib().set(pdfOptions).from(target).save();
+      await html2pdfLib().set(pdfOptions).from(pagesContainer).save();
     } catch (error) {
       ctxWindow.console?.error?.("[UConn Menu Formatter] Failed to generate PDF", error);
       ctxWindow.alert("UConn Menu Formatter: unable to download the PDF. Please try again.");
@@ -861,7 +840,6 @@
     previewDoc.title = titleParts.length ? titleParts.join(" | ") : "UConn Dining Menu";
     previewDoc.body.style.margin = "0";
     previewDoc.body.classList.add("uconn-menu-preview");
-
     ensureStylesheet(previewDoc);
     ensureFonts(previewDoc);
     ensureHtml2Pdf(previewWindow, previewDoc).catch((error) => {
@@ -881,10 +859,63 @@
 
     const instructions = previewDoc.createElement("div");
     instructions.className = "uconn-menu-toolbar__instructions";
-    instructions.innerText = "Click items to toggle suggested (green). Double-click text to edit.";
+    instructions.innerText = "Select text to apply color. Double-click to edit.";
 
     const actions = previewDoc.createElement("div");
     actions.className = "uconn-menu-toolbar__actions";
+
+    const fontSmallerButton = previewDoc.createElement("button");
+    fontSmallerButton.type = "button";
+    fontSmallerButton.className = "uconn-menu-toolbar__button";
+    fontSmallerButton.innerHTML = "&ndash;";
+    fontSmallerButton.title = "Decrease font size";
+    fontSmallerButton.addEventListener("click", () => {
+      const pages = previewDoc.querySelector(".uconn-menu-pages");
+      const currentSize = Number.parseInt(pages.style.getPropertyValue("--uconn-font-scale-mod") || "0", 10);
+      pages.style.setProperty("--uconn-font-scale-mod", `${Math.max(-5, currentSize - 1)}px`);
+    });
+
+    const fontBiggerButton = previewDoc.createElement("button");
+    fontBiggerButton.type = "button";
+    fontBiggerButton.className = "uconn-menu-toolbar__button";
+    fontBiggerButton.innerHTML = "+";
+    fontBiggerButton.title = "Increase font size";
+    fontBiggerButton.addEventListener("click", () => {
+      const pages = previewDoc.querySelector(".uconn-menu-pages");
+      const currentSize = Number.parseInt(pages.style.getPropertyValue("--uconn-font-scale-mod") || "0", 10);
+      pages.style.setProperty("--uconn-font-scale-mod", `${Math.min(5, currentSize + 1)}px`);
+    });
+
+    const colorPalette = previewDoc.createElement("div");
+    colorPalette.className = "uconn-menu-toolbar__color-palette";
+
+    const applyColor = (color) => {
+      const selection = previewDoc.getSelection();
+      if (!selection.rangeCount || selection.isCollapsed) {
+        return;
+      }
+      // Use execCommand to wrap the selection. It's the most reliable way for contenteditable.
+      previewDoc.execCommand("styleWithCSS", false, true);
+      previewDoc.execCommand("foreColor", false, color);
+    };
+
+    Object.entries(HIGHLIGHT_COLORS).forEach(([name, color]) => {
+      const swatch = previewDoc.createElement("button");
+      swatch.type = "button";
+      swatch.className = "uconn-menu-toolbar__color-swatch";
+      swatch.title = `Set color to ${name}`;
+      swatch.style.backgroundColor = color;
+      if (name === "white") {
+        swatch.style.border = "1px solid #94a3b8";
+      }
+      swatch.addEventListener("click", () => applyColor(color));
+      colorPalette.appendChild(swatch);
+    });
+
+    const fontControls = previewDoc.createElement("div");
+    fontControls.className = "uconn-menu-toolbar__font-controls";
+    fontControls.appendChild(fontSmallerButton);
+    fontControls.appendChild(fontBiggerButton);
 
     const printButton = previewDoc.createElement("button");
     printButton.type = "button";
@@ -905,6 +936,8 @@
     closeButton.innerText = "Close";
     closeButton.addEventListener("click", closePreview);
 
+    actions.appendChild(fontControls);
+    actions.appendChild(colorPalette);
     actions.appendChild(printButton);
     actions.appendChild(closeButton);
 
