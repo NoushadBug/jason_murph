@@ -803,7 +803,8 @@
           backgroundColor: null,
           logging: false
         },
-        jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
+        // Use centimeters and explicit 25cm x 20cm page size so output matches requirements.
+        jsPDF: { unit: "cm", format: [25, 20] }
       };
 
       await html2pdfLib().set(pdfOptions).from(pagesContainer).save();
@@ -871,8 +872,19 @@
     fontSmallerButton.title = "Decrease font size";
     fontSmallerButton.addEventListener("click", () => {
       const pages = previewDoc.querySelector(".uconn-menu-pages");
-      const currentSize = Number.parseInt(pages.style.getPropertyValue("--uconn-font-scale-mod") || "0", 10);
-      pages.style.setProperty("--uconn-font-scale-mod", `${Math.max(-5, currentSize - 1)}px`);
+      if (!pages) return;
+      // Adjust the CSS variable used throughout the stylesheet so all text scales together.
+      const computed = (previewWindow && typeof previewWindow.getComputedStyle === 'function')
+        ? previewWindow.getComputedStyle(pages)
+        : previewDoc.defaultView.getComputedStyle(pages);
+      const current = computed.getPropertyValue("--uconn-font-scale-mod") || "0px";
+      const currentVal = Number.parseFloat(current) || 0;
+      const newVal = Math.max(-20, currentVal - 1);
+      pages.style.setProperty("--uconn-font-scale-mod", `${newVal}px`);
+      // Also reduce spacing (gaps/padding). Space reduction increases as font scale decreases.
+      const currentSpace = Number.parseFloat(computed.getPropertyValue("--uconn-space-mod") || "0") || 0;
+      const newSpace = Math.min(40, currentSpace + 2); // cap reduction
+      pages.style.setProperty("--uconn-space-mod", `${newSpace}px`);
     });
 
     const fontBiggerButton = previewDoc.createElement("button");
@@ -882,8 +894,18 @@
     fontBiggerButton.title = "Increase font size";
     fontBiggerButton.addEventListener("click", () => {
       const pages = previewDoc.querySelector(".uconn-menu-pages");
-      const currentSize = Number.parseInt(pages.style.getPropertyValue("--uconn-font-scale-mod") || "0", 10);
-      pages.style.setProperty("--uconn-font-scale-mod", `${Math.min(5, currentSize + 1)}px`);
+      if (!pages) return;
+      const computed = (previewWindow && typeof previewWindow.getComputedStyle === 'function')
+        ? previewWindow.getComputedStyle(pages)
+        : previewDoc.defaultView.getComputedStyle(pages);
+      const current = computed.getPropertyValue("--uconn-font-scale-mod") || "0px";
+      const currentVal = Number.parseFloat(current) || 0;
+      const newVal = Math.min(20, currentVal + 1);
+      pages.style.setProperty("--uconn-font-scale-mod", `${newVal}px`);
+      // Restore spacing when increasing font size.
+      const currentSpace = Number.parseFloat(computed.getPropertyValue("--uconn-space-mod") || "0") || 0;
+      const newSpace = Math.max(0, currentSpace - 2);
+      pages.style.setProperty("--uconn-space-mod", `${newSpace}px`);
     });
 
     const colorPalette = previewDoc.createElement("div");
@@ -946,6 +968,8 @@
 
     const pages = previewDoc.createElement("main");
     pages.className = "uconn-menu-pages";
+  // Set a default font-size so adjustments via the toolbar take effect reliably.
+  pages.style.fontSize = "16px";
 
     menuDataList.forEach((menuData, index) => {
       const posterPage = buildPosterPage(previewDoc, menuData, { assignId: index === 0 });

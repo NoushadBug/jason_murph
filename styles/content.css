@@ -76,7 +76,8 @@ body.uconn-menu-preview {
 .uconn-menu-document {
   width: 100%;
   min-height: 100vh;
-  padding: 32px 24px 48px;
+  /* much thinner page margins so posters can fit more content */
+  padding: 8px 8px 12px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -185,12 +186,18 @@ body.uconn-menu-preview {
 
 .uconn-menu-pages {
   --uconn-font-scale-mod: 0px;
-  width: min(92vw, calc(25cm - 1.8cm));
-  max-width: calc(25cm - 1.8cm);
+  --uconn-space-mod: 0px;
+  --uconn-space-mod-lg: var(--uconn-space-mod);
+  --uconn-space-mod-md: calc(var(--uconn-space-mod) * 0.65);
+  --uconn-space-mod-sm: calc(var(--uconn-space-mod) * 0.45);
+  --uconn-space-mod-xs: calc(var(--uconn-space-mod) * 0.3);
+  /* preview width attempts to reflect final 25cm x 20cm page size */
+  width: min(96vw, 25cm);
+  max-width: 25cm;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
+  gap: max(12px, calc(24px - var(--uconn-space-mod-lg)));
 }
 
 .uconn-menu-page {
@@ -200,33 +207,42 @@ body.uconn-menu-preview {
   page-break-after: always;
 }
 
+/* ensure the poster element matches the required 25cm x 20cm size */
+/* Poster is full-bleed inside the canvas: no external margins */
 #uconn-menu-poster,
 .uconn-menu-poster {
-  width: min(92vw, calc(25cm - 1.8cm));
-  max-width: calc(25cm - 1.8cm);
-  min-height: calc(20cm - 1.8cm);
+  width: 25cm;
+  height: 20cm;
   background: #ffffff;
-  border: 26px solid #032b63;
-  border-radius: 22px;
-  box-shadow: 0 30px 60px rgba(5, 18, 43, 0.35);
+  border: 0; /* remove visible border for maximum content area */
+  border-radius: 0;
+  box-shadow: none;
   box-sizing: border-box;
-  padding: 40px;
+  padding: max(4px, calc(12px - var(--uconn-space-mod-md)));
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: max(12px, calc(28px - var(--uconn-space-mod-lg)));
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
   color: #111827;
 }
 
+@media print {
+  /* 25cm x 20cm page size for printing */
+  @page { size: 25cm 20cm; margin: 0; }
+  body, .uconn-menu-document { margin: 0; padding: 0; }
+  .uconn-menu-pages { width: 25cm; }
+  #uconn-menu-poster, .uconn-menu-poster { width: 25cm; height: 20cm; box-shadow: none; border-width: 0.4cm; }
+}
+
 .uconn-menu-poster__header {
   background: #001f6b;
-  border-radius: 14px;
-  padding: 24px 48px;
+  border-radius: 0;
+  padding: max(8px, calc(20px - var(--uconn-space-mod-md))) max(16px, calc(40px - var(--uconn-space-mod-lg)));
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 40px;
+  gap: max(16px, calc(40px - var(--uconn-space-mod-lg)));
 }
 
 .uconn-menu-poster__logo {
@@ -240,7 +256,7 @@ body.uconn-menu-preview {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: max(2px, calc(6px - var(--uconn-space-mod-xs)));
 }
 
 .uconn-menu-poster__title {
@@ -283,7 +299,7 @@ body.uconn-menu-preview {
 
 .uconn-menu-poster__grid {
   display: grid;
-  gap: 32px;
+  gap: max(10px, calc(24px - var(--uconn-space-mod-lg)));
   grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-items: stretch;
 }
@@ -291,7 +307,7 @@ body.uconn-menu-preview {
 .uconn-menu-meal {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: max(4px, calc(16px - var(--uconn-space-mod-md)));
   min-height: 100%;
 }
 
@@ -303,20 +319,31 @@ body.uconn-menu-preview {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #0b2c6a;
-  padding-bottom: 8px;
-  border-bottom: 4px solid #0b2c6a;
+  padding-bottom: max(0px, calc(6px - var(--uconn-space-mod-sm)));
+  border-bottom: max(0px, calc(3px - var(--uconn-space-mod-xs))) solid #0b2c6a;
 }
 
 .uconn-menu-meal__items {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  /* Use multi-column layout so items flow into columns inside each meal.
+     This helps pack more items vertically and keeps the poster to a single page. */
+  display: block;
+  column-count: 2;
+  column-gap: max(6px, calc(16px - var(--uconn-space-mod-md)));
+  /* fallback spacing between items when columns are not used */
+  gap: max(2px, calc(10px - var(--uconn-space-mod-sm)));
 }
 
 .uconn-menu-item {
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(11, 44, 106, 0.15);
+  /* Make each item an inline-block so it becomes an atomic block inside columns
+     and won't be split across columns. Also ensure it doesn't break inside a column. */
+  display: inline-block;
+  width: 100%;
+  padding-bottom: max(0px, calc(10px - var(--uconn-space-mod-sm)));
+  border-bottom: max(0px, calc(1px - (var(--uconn-space-mod) / 24))) solid rgba(11, 44, 106, 0.15);
   position: relative;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .uconn-menu-item:last-child {
@@ -329,8 +356,12 @@ body.uconn-menu-preview {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(11, 44, 106, 0.78);
-  margin-top: 12px;
-  margin-bottom: 4px;
+  margin-top: max(2px, calc(12px - var(--uconn-space-mod-md)));
+  margin-bottom: max(0px, calc(4px - var(--uconn-space-mod-xs)));
+  /* Make category labels span across all columns so they act as section headers */
+  column-span: all;
+  -webkit-column-span: all;
+  break-inside: avoid;
 }
 
 .uconn-menu-meal__items > .uconn-menu-item__category:first-child {
@@ -349,23 +380,23 @@ body.uconn-menu-preview {
   color: #4b5563;
   font-style: italic;
   font-weight: 700;
-  margin-top: 4px;
+  margin-top: max(0px, calc(4px - var(--uconn-space-mod-xs)));
 }
 
 .uconn-menu-item__allergens {
   font-size: calc(13px + var(--uconn-font-scale-mod));
   color: #d93030;
   font-weight: 700;
-  margin-top: 6px;
+  margin-top: max(0px, calc(6px - var(--uconn-space-mod-sm)));
 }
 
 .uconn-menu-item__tags {
-  margin-top: 6px;
   font-size: calc(12px + var(--uconn-font-scale-mod));
   font-weight: 700;
   color: #0f7760;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  margin-top: max(0px, calc(6px - var(--uconn-space-mod-sm)));
 }
 
 .uconn-menu-item[data-suggested='true'] .uconn-menu-item__title {
@@ -393,7 +424,7 @@ body.uconn-menu-preview {
   padding: 48px 64px;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: max(18px, calc(40px - var(--uconn-space-mod-lg)));
   align-items: center;
   text-align: center;
   color: #ffffff;
@@ -411,7 +442,7 @@ body.uconn-menu-preview {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: max(10px, calc(24px - var(--uconn-space-mod-lg)));
 }
 
 .uconn-menu-info__section-title {
@@ -422,14 +453,14 @@ body.uconn-menu-preview {
 
 .uconn-menu-info__grid {
   display: grid;
-  gap: 28px 48px;
+  gap: max(12px, calc(28px - var(--uconn-space-mod-md))) max(20px, calc(48px - var(--uconn-space-mod-lg)));
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .uconn-menu-info__group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: max(4px, calc(8px - var(--uconn-space-mod-sm)));
   align-items: center;
 }
 
@@ -495,6 +526,14 @@ body.uconn-menu-preview {
 
   .uconn-menu-info__title {
     font-size: calc(44px + var(--uconn-font-scale-mod));
+  }
+}
+
+/* Ensure columns collapse to a single column on narrow previews and for print tools that don't support columns well */
+@media (max-width: 720px), print {
+  .uconn-menu-meal__items {
+    column-count: 1 !important;
+    column-gap: 0 !important;
   }
 }
 
