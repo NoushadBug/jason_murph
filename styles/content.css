@@ -191,6 +191,21 @@ body.uconn-menu-preview {
   --uconn-space-mod-md: calc(var(--uconn-space-mod) * 0.65);
   --uconn-space-mod-sm: calc(var(--uconn-space-mod) * 0.45);
   --uconn-space-mod-xs: calc(var(--uconn-space-mod) * 0.3);
+  --uconn-line-height-lg: clamp(
+    1.12,
+    calc(1.32 - (var(--uconn-space-mod) / 240px)),
+    1.32
+  );
+  --uconn-line-height-md: clamp(
+    1.06,
+    calc(1.26 - (var(--uconn-space-mod) / 260px)),
+    1.26
+  );
+  --uconn-line-height-sm: clamp(
+    1.02,
+    calc(1.2 - (var(--uconn-space-mod) / 280px)),
+    1.2
+  );
   /* preview width attempts to reflect final 25cm x 20cm page size */
   width: min(96vw, 25cm);
   max-width: 25cm;
@@ -372,7 +387,7 @@ body.uconn-menu-preview {
   font-size: calc(20px + var(--uconn-font-scale-mod));
   font-weight: 700;
   color: #1f2937;
-  line-height: 1.35;
+  line-height: var(--uconn-line-height-lg);
 }
 
 .uconn-menu-item__note {
@@ -381,6 +396,7 @@ body.uconn-menu-preview {
   font-style: italic;
   font-weight: 700;
   margin-top: max(0px, calc(4px - var(--uconn-space-mod-xs)));
+  line-height: var(--uconn-line-height-sm);
 }
 
 .uconn-menu-item__allergens {
@@ -388,6 +404,7 @@ body.uconn-menu-preview {
   color: #d93030;
   font-weight: 700;
   margin-top: max(0px, calc(6px - var(--uconn-space-mod-sm)));
+  line-height: var(--uconn-line-height-sm);
 }
 
 .uconn-menu-item__tags {
@@ -397,6 +414,7 @@ body.uconn-menu-preview {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-top: max(0px, calc(6px - var(--uconn-space-mod-sm)));
+  line-height: var(--uconn-line-height-sm);
 }
 
 .uconn-menu-item[data-suggested='true'] .uconn-menu-item__title {
@@ -468,11 +486,13 @@ body.uconn-menu-preview {
   font-size: calc(18px + var(--uconn-font-scale-mod));
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: var(--uconn-line-height-md);
 }
 
 .uconn-menu-info__line {
   font-size: calc(16px + var(--uconn-font-scale-mod));
   letter-spacing: 0.03em;
+  line-height: var(--uconn-line-height-sm);
 }
 
 .uconn-menu-info__footer {
