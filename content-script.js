@@ -42,10 +42,10 @@
   };
 
   const HIGHLIGHT_COLORS = {
-    green: "#008c5a",
-    blue: "#0052a5",
+    green: "#22c55e",
+    blue: "#0b2c6a",
     white: "#ffffff",
-    black: "#111827"
+    black: "#000000"
   };
 
   const INFO_PAGE_CONTENT = [
@@ -476,6 +476,72 @@
     }
   };
 
+  /**
+   * Evenly distributes meal cards into a specified number of columns while preserving category order.
+   */
+  const distributeMealItemsIntoColumns = (ctx, container, entries, columnCount = 2) => {
+    if (!container) {
+      return;
+    }
+
+    container.textContent = "";
+    const safeCount = Number.isFinite(columnCount) && columnCount > 0 ? Math.max(1, Math.floor(columnCount)) : 2;
+
+    const totalItems = Array.isArray(entries) ? entries.length : 0;
+    const baseTarget = safeCount ? Math.floor(totalItems / safeCount) : 0;
+    const remainder = safeCount ? totalItems % safeCount : 0;
+
+    const columns = [];
+    for (let index = 0; index < safeCount; index += 1) {
+      const column = ctx.createElement("div");
+      column.className = "uconn-menu-meal__column";
+      container.appendChild(column);
+      columns.push({
+        el: column,
+        itemCount: 0,
+        lastCategory: null,
+        target: baseTarget + (index < remainder ? 1 : 0)
+      });
+    }
+
+    if (!totalItems) {
+      return;
+    }
+
+    let columnIndex = 0;
+    entries.forEach((entry) => {
+      if (!entry || !entry.element) {
+        return;
+      }
+
+      while (
+        columnIndex < columns.length - 1 &&
+        columns[columnIndex].itemCount >= columns[columnIndex].target
+      ) {
+        columnIndex += 1;
+      }
+
+      const column = columns[columnIndex];
+      const categoryName = typeof entry.category === "string" && entry.category.trim() ? entry.category : null;
+
+      if (categoryName) {
+        if (column.lastCategory !== categoryName) {
+          const categoryLabel = ctx.createElement("div");
+          categoryLabel.className = "uconn-menu-item__category";
+          categoryLabel.innerText = categoryName;
+          categoryLabel.setAttribute("contenteditable", "true");
+          column.el.appendChild(categoryLabel);
+          column.lastCategory = categoryName;
+        }
+      } else {
+        column.lastCategory = null;
+      }
+
+      column.el.appendChild(entry.element);
+      column.itemCount += 1;
+    });
+  };
+
   const createMealColumn = (ctx, meal) => {
     const section = ctx.createElement("section");
     section.className = "uconn-menu-meal";
@@ -489,18 +555,9 @@
     const list = ctx.createElement("div");
     list.className = "uconn-menu-meal__items";
 
-    let activeCategory = null;
-
+    const entries = [];
     meal.items.forEach((item) => {
-      if (item.category && item.category !== activeCategory) {
-        activeCategory = item.category;
-        const categoryLabel = ctx.createElement("div");
-        categoryLabel.className = "uconn-menu-item__category";
-        categoryLabel.innerText = activeCategory;
-        categoryLabel.setAttribute("contenteditable", "true");
-        list.appendChild(categoryLabel);
-      }
-
+      const categoryName = typeof item.category === "string" ? item.category.trim() : null;
       const card = ctx.createElement("article");
       card.className = "uconn-menu-item";
       card.dataset.suggested = "false";
@@ -537,9 +594,13 @@
         card.appendChild(tags);
       }
 
-      list.appendChild(card);
+      entries.push({
+        category: categoryName,
+        element: card
+      });
     });
 
+    distributeMealItemsIntoColumns(ctx, list, entries, 2);
     section.appendChild(list);
     return section;
   };
@@ -928,7 +989,7 @@
       swatch.title = `Set color to ${name}`;
       swatch.style.backgroundColor = color;
       if (name === "white") {
-        swatch.style.border = "1px solid #94a3b8";
+        swatch.style.border = "1px solid rgba(31, 41, 55, 0.35)";
       }
       swatch.addEventListener("click", () => applyColor(color));
       colorPalette.appendChild(swatch);
