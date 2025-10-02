@@ -20,6 +20,12 @@
   const DATE_PICKER_ID = "uconn-menu-date-picker";
   const TRIGGER_WRAPPER_ID = "uconn-menu-trigger-wrapper";
   const TRIGGER_BUSY_TEXT = "Generating...";
+  const MAX_MEAL_ITEMS_PER_COLUMN = 10;
+  const MIN_MEAL_COLUMNS = 1;
+  const AUTO_FONT_MIN = -24;
+  const AUTO_FONT_STEP = 1;
+  const AUTO_SPACE_STEP = 2;
+  const AUTO_SPACE_MAX = 40;
   let triggerButton = null;
   let isGenerating = false;
   const domParser = typeof DOMParser !== "undefined" ? new DOMParser() : null;
@@ -477,22 +483,24 @@
   };
 
   /**
-   * Evenly distributes meal cards into a specified number of columns while preserving category order.
+   * Distributes meal cards into dynamically sized columns while preserving category order.
    */
-  const distributeMealItemsIntoColumns = (ctx, container, entries, columnCount = 2) => {
+  const distributeMealItemsIntoColumns = (ctx, container, entries) => {
     if (!container) {
       return;
     }
 
     container.textContent = "";
-    const safeCount = Number.isFinite(columnCount) && columnCount > 0 ? Math.max(1, Math.floor(columnCount)) : 2;
-
     const totalItems = Array.isArray(entries) ? entries.length : 0;
-    const baseTarget = safeCount ? Math.floor(totalItems / safeCount) : 0;
-    const remainder = safeCount ? totalItems % safeCount : 0;
+    const computedColumnCount = totalItems
+      ? Math.max(MIN_MEAL_COLUMNS, Math.ceil(totalItems / MAX_MEAL_ITEMS_PER_COLUMN))
+      : MIN_MEAL_COLUMNS;
+    container.style.setProperty("--uconn-meal-columns", String(computedColumnCount));
+    const baseTarget = Math.floor(totalItems / computedColumnCount);
+    const remainder = totalItems % computedColumnCount;
 
     const columns = [];
-    for (let index = 0; index < safeCount; index += 1) {
+    for (let index = 0; index < computedColumnCount; index += 1) {
       const column = ctx.createElement("div");
       column.className = "uconn-menu-meal__column";
       container.appendChild(column);
@@ -600,7 +608,7 @@
       });
     });
 
-    distributeMealItemsIntoColumns(ctx, list, entries, 2);
+    distributeMealItemsIntoColumns(ctx, list, entries);
     section.appendChild(list);
     return section;
   };
@@ -655,6 +663,56 @@
     page.appendChild(footer);
 
     return page;
+  };
+
+  /**
+   * Automatically shrinks page typography and spacing until each poster fits the fixed canvas height.
+   */
+  const applyAutoFontScaling = (ctxWindow, ctxDoc) => {
+    if (!ctxDoc) {
+      return;
+    }
+
+    const schedule = ctxWindow && typeof ctxWindow.requestAnimationFrame === "function"
+      ? ctxWindow.requestAnimationFrame.bind(ctxWindow)
+      : ctxDoc.defaultView && typeof ctxDoc.defaultView.requestAnimationFrame === "function"
+        ? ctxDoc.defaultView.requestAnimationFrame.bind(ctxDoc.defaultView)
+        : (fn) => setTimeout(fn, 0);
+
+    schedule(() => {
+      const pages = Array.from(ctxDoc.querySelectorAll(".uconn-menu-page--poster"));
+      pages.forEach((page) => {
+        const poster = page.querySelector(".uconn-menu-poster");
+        if (!poster) {
+          return;
+        }
+
+        page.style.setProperty("--uconn-font-scale-auto", "0px");
+        page.style.setProperty("--uconn-space-mod-auto", "0px");
+        const availableHeight = poster.clientHeight;
+        if (!availableHeight) {
+          return;
+        }
+
+        let iterations = 0;
+        while (poster.scrollHeight > availableHeight && iterations < 48) {
+          const currentScale = Number.parseFloat(page.style.getPropertyValue("--uconn-font-scale-auto") || "0") || 0;
+          if (currentScale <= AUTO_FONT_MIN) {
+            page.style.setProperty("--uconn-font-scale-auto", `${AUTO_FONT_MIN}px`);
+            page.style.setProperty("--uconn-space-mod-auto", `${AUTO_SPACE_MAX}px`);
+            break;
+          }
+
+          const nextScale = currentScale - AUTO_FONT_STEP;
+          page.style.setProperty("--uconn-font-scale-auto", `${nextScale}px`);
+          const currentSpace = Number.parseFloat(page.style.getPropertyValue("--uconn-space-mod-auto") || "0") || 0;
+          const nextSpace = Math.min(AUTO_SPACE_MAX, currentSpace + AUTO_SPACE_STEP);
+          page.style.setProperty("--uconn-space-mod-auto", `${nextSpace}px`);
+          poster.getBoundingClientRect();
+          iterations += 1;
+        }
+      });
+    });
   };
 
   const buildPosterPage = (ctx, data, options = {}) => {
@@ -1029,8 +1087,8 @@
 
     const pages = previewDoc.createElement("main");
     pages.className = "uconn-menu-pages";
-  // Set a default font-size so adjustments via the toolbar take effect reliably.
-  pages.style.fontSize = "16px";
+    // Set a default font-size so adjustments via the toolbar take effect reliably.
+    pages.style.fontSize = "16px";
 
     menuDataList.forEach((menuData, index) => {
       const posterPage = buildPosterPage(previewDoc, menuData, { assignId: index === 0 });
@@ -1045,6 +1103,7 @@
     documentRoot.appendChild(pages);
 
     previewDoc.body.appendChild(documentRoot);
+    applyAutoFontScaling(previewWindow, previewDoc);
     previewWindow.focus();
 
     if (errors.length) {

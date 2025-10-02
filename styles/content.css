@@ -186,11 +186,15 @@ body.uconn-menu-preview {
 
 .uconn-menu-pages {
   --uconn-font-scale-mod: 0px;
+  --uconn-font-scale-auto: 0px;
+  --uconn-font-scale-total: calc(var(--uconn-font-scale-mod) + var(--uconn-font-scale-auto));
   --uconn-space-mod: 0px;
-  --uconn-space-mod-lg: var(--uconn-space-mod);
-  --uconn-space-mod-md: calc(var(--uconn-space-mod) * 0.65);
-  --uconn-space-mod-sm: calc(var(--uconn-space-mod) * 0.45);
-  --uconn-space-mod-xs: calc(var(--uconn-space-mod) * 0.3);
+  --uconn-space-mod-auto: 0px;
+  --uconn-space-mod-total: calc(var(--uconn-space-mod) + var(--uconn-space-mod-auto));
+  --uconn-space-mod-lg: var(--uconn-space-mod-total);
+  --uconn-space-mod-md: calc(var(--uconn-space-mod-total) * 0.65);
+  --uconn-space-mod-sm: calc(var(--uconn-space-mod-total) * 0.45);
+  --uconn-space-mod-xs: calc(var(--uconn-space-mod-total) * 0.3);
   /* preview width attempts to reflect final 25cm x 20cm page size */
   width: min(96vw, 25cm);
   max-width: 25cm;
@@ -262,21 +266,21 @@ body.uconn-menu-preview {
 .uconn-menu-poster__title {
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
-  font-size: calc(60px + var(--uconn-font-scale-mod));
+  font-size: calc(60px + var(--uconn-font-scale-total));
   letter-spacing: 0.12em;
   text-transform: uppercase;
   line-height: 1;
 }
 
 .uconn-menu-poster__date {
-  font-size: calc(30px + var(--uconn-font-scale-mod));
+  font-size: calc(30px + var(--uconn-font-scale-total));
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #ffffff;
 }
 
 .uconn-menu-poster__subtitle {
-  font-size: calc(20px + var(--uconn-font-scale-mod));
+  font-size: calc(20px + var(--uconn-font-scale-total));
   font-weight: 600;
   letter-spacing: 0.08em;
   color: #ffffff;
@@ -291,7 +295,7 @@ body.uconn-menu-preview {
   text-align: center;
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
-  font-size: calc(44px + var(--uconn-font-scale-mod));
+  font-size: calc(44px + var(--uconn-font-scale-total));
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #0b2c6a;
@@ -315,7 +319,7 @@ body.uconn-menu-preview {
   text-align: center;
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
-  font-size: calc(30px + var(--uconn-font-scale-mod));
+  font-size: calc(30px + var(--uconn-font-scale-total));
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #0b2c6a;
@@ -325,7 +329,7 @@ body.uconn-menu-preview {
 
 .uconn-menu-meal__items {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--uconn-meal-columns, 2), minmax(0, 1fr));
   gap: max(6px, calc(16px - var(--uconn-space-mod-md)));
 }
 
@@ -338,7 +342,7 @@ body.uconn-menu-preview {
 .uconn-menu-item {
   display: block;
   padding-bottom: max(0px, calc(10px - var(--uconn-space-mod-sm)));
-  border-bottom: max(0px, calc(1px - (var(--uconn-space-mod) / 24))) solid rgba(11, 44, 106, 0.15);
+  border-bottom: max(0px, calc(1px - (var(--uconn-space-mod-total) / 24))) solid rgba(11, 44, 106, 0.15);
   position: relative;
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
@@ -350,7 +354,7 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-item__category {
-  font-size: calc(12px + var(--uconn-font-scale-mod));
+  font-size: calc(12px + var(--uconn-font-scale-total));
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -365,14 +369,14 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-item__title {
-  font-size: calc(20px + var(--uconn-font-scale-mod));
+  font-size: calc(20px + var(--uconn-font-scale-total));
   font-weight: 700;
   color: #1f2937;
   line-height: 1.35;
 }
 
 .uconn-menu-item__note {
-  font-size: calc(13px + var(--uconn-font-scale-mod));
+  font-size: calc(13px + var(--uconn-font-scale-total));
   color: rgba(31, 41, 55, 0.75);
   font-style: italic;
   font-weight: 700;
@@ -380,14 +384,14 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-item__allergens {
-  font-size: calc(13px + var(--uconn-font-scale-mod));
+  font-size: calc(13px + var(--uconn-font-scale-total));
   color: #d93030;
   font-weight: 700;
   margin-top: max(0px, calc(6px - var(--uconn-space-mod-sm)));
 }
 
 .uconn-menu-item__tags {
-  font-size: calc(12px + var(--uconn-font-scale-mod));
+  font-size: calc(12px + var(--uconn-font-scale-total));
   font-weight: 700;
   color: #0f7760;
   text-transform: uppercase;
@@ -429,7 +433,7 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-info__title {
-  font-size: calc(60px + var(--uconn-font-scale-mod));
+  font-size: calc(60px + var(--uconn-font-scale-total));
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -442,7 +446,7 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-info__section-title {
-  font-size: calc(26px + var(--uconn-font-scale-mod));
+  font-size: calc(26px + var(--uconn-font-scale-total));
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -461,18 +465,18 @@ body.uconn-menu-preview {
 }
 
 .uconn-menu-info__group-title {
-  font-size: calc(18px + var(--uconn-font-scale-mod));
+  font-size: calc(18px + var(--uconn-font-scale-total));
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .uconn-menu-info__line {
-  font-size: calc(16px + var(--uconn-font-scale-mod));
+  font-size: calc(16px + var(--uconn-font-scale-total));
   letter-spacing: 0.03em;
 }
 
 .uconn-menu-info__footer {
-  font-size: calc(18px + var(--uconn-font-scale-mod));
+  font-size: calc(18px + var(--uconn-font-scale-total));
   letter-spacing: 0.1em;
 }
 
@@ -493,16 +497,16 @@ body.uconn-menu-preview {
   }
 
   .uconn-menu-poster__title {
-    font-size: calc(48px + var(--uconn-font-scale-mod));
+    font-size: calc(48px + var(--uconn-font-scale-total));
     letter-spacing: 0.1em;
   }
 
   .uconn-menu-poster__date {
-    font-size: calc(26px + var(--uconn-font-scale-mod));
+    font-size: calc(26px + var(--uconn-font-scale-total));
   }
 
   .uconn-menu-poster__subtitle {
-    font-size: calc(18px + var(--uconn-font-scale-mod));
+    font-size: calc(18px + var(--uconn-font-scale-total));
   }
 
   .uconn-menu-poster__grid {
@@ -521,7 +525,7 @@ body.uconn-menu-preview {
   }
 
   .uconn-menu-info__title {
-    font-size: calc(44px + var(--uconn-font-scale-mod));
+    font-size: calc(44px + var(--uconn-font-scale-total));
   }
 }
 
