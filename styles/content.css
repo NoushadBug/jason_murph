@@ -232,14 +232,22 @@ body.uconn-menu-preview {
   font-family: 'League Spartan', sans-serif;
   font-weight: 700;
   color: #1f2937;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 @media print {
   /* 25cm x 20cm page size for printing */
   @page { size: 25cm 20cm; margin: 0; }
   body, .uconn-menu-document { margin: 0; padding: 0; }
+  body { background: #ffffff !important; }
   .uconn-menu-pages { width: 25cm; }
-  #uconn-menu-poster, .uconn-menu-poster { width: 25cm; height: 20cm; box-shadow: none; border-width: 0.4cm; }
+  #uconn-menu-poster, .uconn-menu-poster {
+    width: 25cm;
+    height: 20cm;
+    box-shadow: none;
+    border: none;
+  }
 }
 
 .uconn-menu-poster__header {
@@ -558,29 +566,38 @@ body.uconn-menu-preview {
   }
 }
 
+html[data-uconn-printing='true'],
 body[data-uconn-printing='true'] {
   background: #ffffff !important;
 }
 
+html[data-uconn-printing='true'] .uconn-menu-document,
 body[data-uconn-printing='true'] .uconn-menu-document {
   padding: 0 !important;
   background: transparent !important;
 }
 
+html[data-uconn-printing='true'] .uconn-menu-toolbar,
 body[data-uconn-printing='true'] .uconn-menu-toolbar {
   display: none !important;
 }
 
+html[data-uconn-printing='true'] .uconn-menu-page,
 body[data-uconn-printing='true'] .uconn-menu-page {
   display: block;
   page-break-inside: avoid;
   page-break-after: always;
 }
 
+html[data-uconn-printing='true'] #uconn-menu-poster,
+html[data-uconn-printing='true'] .uconn-menu-poster,
+html[data-uconn-printing='true'] .uconn-menu-info,
 body[data-uconn-printing='true'] #uconn-menu-poster,
 body[data-uconn-printing='true'] .uconn-menu-poster,
 body[data-uconn-printing='true'] .uconn-menu-info {
   box-shadow: none !important;
   margin: 0 auto !important;
   border: none !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }

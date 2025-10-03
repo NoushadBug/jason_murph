@@ -861,10 +861,17 @@
     if (!ctxDoc?.body) {
       return;
     }
+    const { body, documentElement } = ctxDoc;
     if (isPrinting) {
-      ctxDoc.body.dataset.uconnPrinting = "true";
+      body.dataset.uconnPrinting = "true";
+      if (documentElement) {
+        documentElement.dataset.uconnPrinting = "true";
+      }
     } else {
-      delete ctxDoc.body.dataset.uconnPrinting;
+      delete body.dataset.uconnPrinting;
+      if (documentElement) {
+        delete documentElement.dataset.uconnPrinting;
+      }
     }
   };
 
