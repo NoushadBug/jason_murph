@@ -12,6 +12,9 @@
     }
     return "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/University_of_Connecticut_seal.svg/1200px-University_of_Connecticut_seal.svg.png";
   })();
+  const HTML2PDF_SCRIPT_ID = "uconn-menu-html2pdf-script";
+  const HTML2PDF_SCRIPT_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+  const html2PdfPromises = new WeakMap();
   const MENU_SECTION_SELECTOR = ".shortmenumeals";
   const NUTRITION_LINK_SELECTOR = "#pg-60-3 a[href*='shortmenu.aspx']";
   const DATE_PICKER_ID = "uconn-menu-date-picker";
@@ -19,11 +22,10 @@
   const TRIGGER_BUSY_TEXT = "Generating...";
   const MAX_MEAL_ITEMS_PER_COLUMN = 10;
   const MIN_MEAL_COLUMNS = 1;
-  const AUTO_FONT_MIN = -60;
-  const AUTO_SPACE_MAX = 120;
-  const AUTO_LINE_HEIGHT_MIN = 0.84;
-  const AUTO_PADDING_MAX = 32;
-  const AUTO_SCALE_MAX_ITERATIONS = 96;
+  const AUTO_FONT_MIN = -24;
+  const AUTO_FONT_STEP = 1;
+  const AUTO_SPACE_STEP = 2;
+  const AUTO_SPACE_MAX = 40;
   let triggerButton = null;
   let isGenerating = false;
   const domParser = typeof DOMParser !== "undefined" ? new DOMParser() : null;
@@ -664,12 +666,10 @@
   };
 
   /**
-   * Automatically shrinks page typography, spacing, and line heights so each poster fits within the fixed canvas height.
-   * Returns a promise that resolves once scaling adjustments finish executing.
+   * Automatically shrinks page typography and spacing until each poster fits the fixed canvas height.
    */
-  const applyAutoFontScaling = (ctxWindow, ctxDoc) => new Promise((resolve) => {
+  const applyAutoFontScaling = (ctxWindow, ctxDoc) => {
     if (!ctxDoc) {
-      resolve();
       return;
     }
 
@@ -681,11 +681,6 @@
 
     schedule(() => {
       const pages = Array.from(ctxDoc.querySelectorAll(".uconn-menu-page--poster"));
-      if (!pages.length) {
-        resolve();
-        return;
-      }
-
       pages.forEach((page) => {
         const poster = page.querySelector(".uconn-menu-poster");
         if (!poster) {
@@ -694,75 +689,31 @@
 
         page.style.setProperty("--uconn-font-scale-auto", "0px");
         page.style.setProperty("--uconn-space-mod-auto", "0px");
-        page.style.setProperty("--uconn-line-height-auto", "1");
-        page.style.setProperty("--uconn-poster-padding-auto", "0px");
-
         const availableHeight = poster.clientHeight;
         if (!availableHeight) {
           return;
         }
 
         let iterations = 0;
-        let previousOverflow = poster.scrollHeight - availableHeight;
-
-        while (poster.scrollHeight > availableHeight && iterations < AUTO_SCALE_MAX_ITERATIONS) {
-          const overflowRatio = poster.scrollHeight / availableHeight;
-          let adjustmentsMade = false;
-
+        while (poster.scrollHeight > availableHeight && iterations < 48) {
           const currentScale = Number.parseFloat(page.style.getPropertyValue("--uconn-font-scale-auto") || "0") || 0;
-          if (currentScale > AUTO_FONT_MIN) {
-            const fontStep = Math.max(1, Math.min(6, Math.ceil((overflowRatio - 1) * 18)));
-            const nextScale = Math.max(AUTO_FONT_MIN, currentScale - fontStep);
-            if (nextScale !== currentScale) {
-              page.style.setProperty("--uconn-font-scale-auto", `${nextScale}px`);
-              adjustmentsMade = true;
-            }
-          }
-
-          const currentSpace = Number.parseFloat(page.style.getPropertyValue("--uconn-space-mod-auto") || "0") || 0;
-          if (poster.scrollHeight > availableHeight && currentSpace < AUTO_SPACE_MAX) {
-            const spaceStep = Math.max(2, Math.min(16, Math.ceil((overflowRatio - 1) * 48)));
-            const nextSpace = Math.min(AUTO_SPACE_MAX, currentSpace + spaceStep);
-            if (nextSpace !== currentSpace) {
-              page.style.setProperty("--uconn-space-mod-auto", `${nextSpace}px`);
-              adjustmentsMade = true;
-            }
-          }
-
-          const currentLineHeight = Number.parseFloat(page.style.getPropertyValue("--uconn-line-height-auto") || "1") || 1;
-          if (poster.scrollHeight > availableHeight && currentLineHeight > AUTO_LINE_HEIGHT_MIN) {
-            const lineStep = Math.max(0.01, Math.min(0.06, (overflowRatio - 1) * 0.22));
-            const nextLineHeight = Math.max(AUTO_LINE_HEIGHT_MIN, currentLineHeight - lineStep);
-            if (Math.abs(nextLineHeight - currentLineHeight) >= 0.001) {
-              page.style.setProperty("--uconn-line-height-auto", nextLineHeight.toFixed(3));
-              adjustmentsMade = true;
-            }
-          }
-
-          const currentPadding = Number.parseFloat(page.style.getPropertyValue("--uconn-poster-padding-auto") || "0") || 0;
-          if (poster.scrollHeight > availableHeight && currentPadding < AUTO_PADDING_MAX) {
-            const paddingStep = Math.max(1, Math.min(6, Math.ceil((overflowRatio - 1) * 18)));
-            const nextPadding = Math.min(AUTO_PADDING_MAX, currentPadding + paddingStep);
-            if (nextPadding !== currentPadding) {
-              page.style.setProperty("--uconn-poster-padding-auto", `${nextPadding}px`);
-              adjustmentsMade = true;
-            }
-          }
-
-          poster.getBoundingClientRect();
-          iterations += 1;
-
-          const currentOverflow = poster.scrollHeight - availableHeight;
-          if (!adjustmentsMade || Math.abs(currentOverflow - previousOverflow) < 1) {
+          if (currentScale <= AUTO_FONT_MIN) {
+            page.style.setProperty("--uconn-font-scale-auto", `${AUTO_FONT_MIN}px`);
+            page.style.setProperty("--uconn-space-mod-auto", `${AUTO_SPACE_MAX}px`);
             break;
           }
-          previousOverflow = currentOverflow;
+
+          const nextScale = currentScale - AUTO_FONT_STEP;
+          page.style.setProperty("--uconn-font-scale-auto", `${nextScale}px`);
+          const currentSpace = Number.parseFloat(page.style.getPropertyValue("--uconn-space-mod-auto") || "0") || 0;
+          const nextSpace = Math.min(AUTO_SPACE_MAX, currentSpace + AUTO_SPACE_STEP);
+          page.style.setProperty("--uconn-space-mod-auto", `${nextSpace}px`);
+          poster.getBoundingClientRect();
+          iterations += 1;
         }
       });
-
-      resolve();
     });
-  });
+  };
 
   const buildPosterPage = (ctx, data, options = {}) => {
     const { assignId = false } = options;
@@ -857,27 +808,83 @@
     ctxDoc.head.appendChild(link);
   };
 
+  const ensureHtml2Pdf = (ctxWindow, ctxDoc) => {
+    if (!ctxWindow || !ctxDoc) {
+      return Promise.reject(new Error("Preview not ready"));
+    }
+
+    if (ctxWindow.html2pdf) {
+      return Promise.resolve(ctxWindow.html2pdf);
+    }
+
+    const cachedPromise = html2PdfPromises.get(ctxWindow);
+    if (cachedPromise) {
+      return cachedPromise;
+    }
+
+    const loadPromise = new Promise((resolve, reject) => {
+      const existingScript = ctxDoc.getElementById(HTML2PDF_SCRIPT_ID);
+      if (existingScript) {
+        existingScript.addEventListener(
+          "load",
+          () => {
+            if (ctxWindow.html2pdf) {
+              resolve(ctxWindow.html2pdf);
+            } else {
+              reject(new Error("html2pdf unavailable after load"));
+            }
+          },
+          { once: true }
+        );
+        existingScript.addEventListener(
+          "error",
+          () => reject(new Error("Failed to load html2pdf")),
+          { once: true }
+        );
+        return;
+      }
+
+      const script = ctxDoc.createElement("script");
+      script.id = HTML2PDF_SCRIPT_ID;
+      script.src = HTML2PDF_SCRIPT_SRC;
+      script.type = "text/javascript";
+      script.crossOrigin = "anonymous";
+      script.referrerPolicy = "no-referrer";
+      script.addEventListener(
+        "load",
+        () => {
+          if (ctxWindow.html2pdf) {
+            resolve(ctxWindow.html2pdf);
+          } else {
+            reject(new Error("html2pdf unavailable after load"));
+          }
+        },
+        { once: true }
+      );
+      script.addEventListener(
+        "error",
+        () => reject(new Error("Failed to load html2pdf")),
+        { once: true }
+      );
+      ctxDoc.head.appendChild(script);
+    });
+
+    html2PdfPromises.set(ctxWindow, loadPromise);
+    loadPromise.catch(() => html2PdfPromises.delete(ctxWindow));
+    return loadPromise;
+  };
+
   const setPrintingState = (ctxDoc, isPrinting) => {
     if (!ctxDoc?.body) {
       return;
     }
-    const { body, documentElement } = ctxDoc;
     if (isPrinting) {
-      body.dataset.uconnPrinting = "true";
-      if (documentElement) {
-        documentElement.dataset.uconnPrinting = "true";
-      }
+      ctxDoc.body.dataset.uconnPrinting = "true";
     } else {
-      delete body.dataset.uconnPrinting;
-      if (documentElement) {
-        delete documentElement.dataset.uconnPrinting;
-      }
+      delete ctxDoc.body.dataset.uconnPrinting;
     }
   };
 
-  /**
-   * Opens the browser print dialog for the preview window and waits for completion.
-   */
   const printPoster = async (previewWindow, ctxDoc) => {
     const ctxWindow = previewWindow || window;
     const pagesContainer = ctxDoc?.querySelector(".uconn-menu-pages");
@@ -889,57 +896,46 @@
     setPrintingState(ctxDoc, true);
 
     try {
-      if (typeof ctxWindow.print !== "function") {
-        throw new Error("print not supported in this context");
+      const html2pdfLib = await ensureHtml2Pdf(ctxWindow, ctxDoc);
+      if (typeof html2pdfLib !== "function") {
+        throw new Error("html2pdf not available");
       }
 
-      await new Promise((resolve, reject) => {
-        let settled = false;
-        const cleanup = () => {
-          settled = true;
-          ctxWindow.removeEventListener("afterprint", handleAfterPrint);
-          clearTimeout(fallbackTimer);
-        };
-        const handleAfterPrint = () => {
-          if (!settled) {
-            cleanup();
-            resolve();
-          }
-        };
-        const fallbackTimer = setTimeout(() => {
-          if (!settled) {
-            cleanup();
-            resolve();
-          }
-        }, 4000);
+      const poster = ctxDoc.getElementById(POSTER_ID);
+      const dateText = poster?.querySelector(".uconn-menu-poster__date")?.textContent?.trim() || "menu";
+      const safeFilenameBase = `UConn-Dining-Menus-${dateText}`
+        .replace(/[<>:"/\\|?*]+/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .slice(0, 120)
+        || "uconn-menu-poster";
+      const filename = `${safeFilenameBase}.pdf`;
 
-        ctxWindow.addEventListener("afterprint", handleAfterPrint, { once: true });
+      const pdfOptions = {
+        margin: 0,
+        filename,
+        pagebreak: { mode: ["css", "avoid-all"] },
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: null,
+          logging: false
+        },
+        // Use centimeters and explicit 25cm x 20cm page size so output matches requirements.
+        jsPDF: { unit: "cm", format: [25, 20] }
+      };
 
-        try {
-          ctxWindow.focus();
-          const result = ctxWindow.print?.();
-          if (result instanceof Promise) {
-            result.then(handleAfterPrint).catch((error) => {
-              cleanup();
-              reject(error);
-            });
-          }
-        } catch (error) {
-          cleanup();
-          reject(error);
-        }
-      });
+      await html2pdfLib().set(pdfOptions).from(pagesContainer).save();
     } catch (error) {
-      ctxWindow.console?.error?.("[UConn Menu Formatter] Print dialog failed", error);
-      ctxWindow.alert(
-        "UConn Menu Formatter: unable to open the print dialog. Please check your browser settings and try again."
-      );
+      ctxWindow.console?.error?.("[UConn Menu Formatter] Failed to generate PDF", error);
+      ctxWindow.alert("UConn Menu Formatter: unable to download the PDF. Please try again.");
     } finally {
       setPrintingState(ctxDoc, false);
     }
   };
 
-  const renderPreview = async (menuDataList, options = {}) => {
+  const renderPreview = (menuDataList, options = {}) => {
     const { errors = [] } = options;
     const previewWindow = window.open("", "_blank");
     if (!previewWindow) {
@@ -950,8 +946,6 @@
     previewDoc.open();
     previewDoc.write("<!doctype html><html><head><meta charset=\"utf-8\"></head><body></body></html>");
     previewDoc.close();
-
-    let autoPrintTriggered = false;
 
     const firstMenu = menuDataList[0];
     const hallNames = menuDataList.map((item) => item.hallName).filter(Boolean);
@@ -968,6 +962,9 @@
     previewDoc.body.classList.add("uconn-menu-preview");
     ensureStylesheet(previewDoc);
     ensureFonts(previewDoc);
+    ensureHtml2Pdf(previewWindow, previewDoc).catch((error) => {
+      previewWindow.console?.warn?.("[UConn Menu Formatter] html2pdf failed to preload", error);
+    });
 
     const closePreview = () => {
       setPrintingState(previewDoc, false);
@@ -982,8 +979,7 @@
 
     const instructions = previewDoc.createElement("div");
     instructions.className = "uconn-menu-toolbar__instructions";
-    instructions.innerText =
-      "Select text to apply color. Double-click to edit. Use Print Poster to open the browser's Save to PDF dialog.";
+    instructions.innerText = "Select text to apply color. Double-click to edit.";
 
     const actions = previewDoc.createElement("div");
     actions.className = "uconn-menu-toolbar__actions";
@@ -1065,9 +1061,8 @@
     const printButton = previewDoc.createElement("button");
     printButton.type = "button";
     printButton.className = "uconn-menu-toolbar__button uconn-menu-toolbar__button--primary";
-    printButton.innerText = "Print Poster";
+    printButton.innerText = "Download PDF";
     printButton.addEventListener("click", () => {
-      autoPrintTriggered = true;
       printButton.disabled = true;
       printButton.classList.add("is-disabled");
       Promise.resolve(printPoster(previewWindow, previewDoc)).finally(() => {
@@ -1075,31 +1070,6 @@
         printButton.classList.remove("is-disabled");
       });
     });
-
-    const triggerAutoPrint = () => {
-      if (autoPrintTriggered) {
-        return;
-      }
-      autoPrintTriggered = true;
-
-      printButton.disabled = true;
-      printButton.classList.add("is-disabled");
-
-      const fontsReady = previewDoc.fonts && typeof previewDoc.fonts.ready?.then === "function"
-        ? previewDoc.fonts.ready.catch(() => undefined)
-        : Promise.resolve();
-
-      fontsReady
-        .then(() => new Promise((resolve) => setTimeout(resolve, 350)))
-        .then(() => printPoster(previewWindow, previewDoc))
-        .catch((error) => {
-          previewWindow.console?.error?.("[UConn Menu Formatter] Auto print dialog failed", error);
-        })
-        .finally(() => {
-          printButton.disabled = false;
-          printButton.classList.remove("is-disabled");
-        });
-    };
 
     const closeButton = previewDoc.createElement("button");
     closeButton.type = "button";
@@ -1133,9 +1103,8 @@
     documentRoot.appendChild(pages);
 
     previewDoc.body.appendChild(documentRoot);
-    await applyAutoFontScaling(previewWindow, previewDoc);
+    applyAutoFontScaling(previewWindow, previewDoc);
     previewWindow.focus();
-    triggerAutoPrint();
 
     if (errors.length) {
       const errorMessage = errors
@@ -1176,7 +1145,7 @@
         if (!data.meals.length) {
           throw new Error("no menu data detected on this page.");
         }
-        await renderPreview([data]);
+        renderPreview([data]);
         return;
       }
 
@@ -1188,7 +1157,7 @@
         throw new Error(`Unable to prepare menus: ${message}`);
       }
 
-      await renderPreview(menus, { errors });
+      renderPreview(menus, { errors });
     } catch (error) {
       alert(`UConn Menu Formatter: ${error.message || error}`);
     } finally {
