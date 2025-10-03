@@ -574,6 +574,10 @@ body[data-uconn-printing='true'] {
   background: #ffffff !important;
 }
 
+body[data-uconn-printing='true'] .uconn-menu-item__delete {
+  display: none !important;
+}
+
 body[data-uconn-printing='true'] .uconn-menu-document {
   padding: 0 !important;
   background: transparent !important;
