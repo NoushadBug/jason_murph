@@ -349,6 +349,33 @@ body.uconn-menu-preview {
   page-break-inside: avoid;
 }
 
+.uconn-menu-item__delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(11, 44, 106, 0.12);
+  color: #0b2c6a;
+  font-family: 'League Spartan', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.uconn-menu-item__delete:hover {
+  background: rgba(11, 44, 106, 0.2);
+  transform: translate(50%, -50%) scale(1.05);
+}
+
 .uconn-menu-item:last-child {
   border-bottom: none;
 }
@@ -410,6 +437,12 @@ body.uconn-menu-preview {
 
 .uconn-menu-item[data-suggested='true'] .uconn-menu-item__tags {
   color: #0f7760;
+}
+
+@media print {
+  .uconn-menu-item__delete {
+    display: none;
+  }
 }
 
 .uconn-menu-info {

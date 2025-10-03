@@ -550,6 +550,64 @@
     });
   };
 
+  /**
+   * Adds a delete control to an individual dish card and removes orphaned category labels.
+   */
+  const attachDishDeleteControl = (ctx, card) => {
+    if (!ctx || !card) {
+      return;
+    }
+
+    const deleteButton = ctx.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "uconn-menu-item__delete";
+    deleteButton.setAttribute("aria-label", "Remove dish");
+    deleteButton.innerText = "×";
+    deleteButton.addEventListener("click", (event) => {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      const parentColumn = card.parentElement;
+      if (!parentColumn) {
+        card.remove();
+        return;
+      }
+
+      let categoryLabel = null;
+      let previous = card.previousElementSibling;
+      while (previous) {
+        if (previous.classList && previous.classList.contains("uconn-menu-item__category")) {
+          categoryLabel = previous;
+          break;
+        }
+        if (previous.classList && previous.classList.contains("uconn-menu-item")) {
+          break;
+        }
+        previous = previous.previousElementSibling;
+      }
+
+      card.remove();
+
+      if (!categoryLabel || categoryLabel.parentElement !== parentColumn) {
+        return;
+      }
+
+      let sibling = categoryLabel.nextElementSibling;
+      while (sibling && !(sibling.classList && sibling.classList.contains("uconn-menu-item__category"))) {
+        if (sibling.classList && sibling.classList.contains("uconn-menu-item")) {
+          return;
+        }
+        sibling = sibling.nextElementSibling;
+      }
+
+      categoryLabel.remove();
+    });
+
+    card.appendChild(deleteButton);
+  };
+
   const createMealColumn = (ctx, meal) => {
     const section = ctx.createElement("section");
     section.className = "uconn-menu-meal";
@@ -606,6 +664,8 @@
         category: categoryName,
         element: card
       });
+
+      attachDishDeleteControl(ctx, card);
     });
 
     distributeMealItemsIntoColumns(ctx, list, entries);
