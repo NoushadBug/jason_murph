@@ -987,6 +987,33 @@
   /**
    * Converts each poster page element into a canvas using html2canvas so the poster can be exported consistently.
    */
+  /**
+   * Ensures the generated canvas uses consistent dimensions and a white background for PDF export.
+   */
+  const createNormalizedCanvas = (ctxWindow, canvas, pageNode, scale) => {
+    if (!(canvas instanceof ctxWindow.HTMLCanvasElement) || !pageNode) {
+      return canvas;
+    }
+
+    const bounds = pageNode.getBoundingClientRect();
+    const normalizedScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+    const targetWidth = Math.max(1, Math.round(bounds.width * normalizedScale));
+    const targetHeight = Math.max(1, Math.round(bounds.height * normalizedScale));
+
+    const normalizedCanvas = ctxWindow.document.createElement("canvas");
+    normalizedCanvas.width = targetWidth;
+    normalizedCanvas.height = targetHeight;
+
+    const normalizedContext = normalizedCanvas.getContext("2d");
+    if (normalizedContext) {
+      normalizedContext.fillStyle = "#ffffff";
+      normalizedContext.fillRect(0, 0, targetWidth, targetHeight);
+      normalizedContext.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+    }
+
+    return normalizedCanvas;
+  };
+
   const renderPosterPagesToCanvas = async (ctxWindow, pagesContainer, options) => {
     if (!ctxWindow || !pagesContainer) {
       throw new Error("Preview not ready");
@@ -1002,7 +1029,14 @@
       throw new Error("No poster pages found");
     }
 
-    return Promise.all(pageNodes.map((pageNode) => html2canvasFn(pageNode, options)));
+    const scale = Number.isFinite(options?.scale) && options.scale > 0 ? options.scale : ctxWindow.devicePixelRatio || 1;
+
+    return Promise.all(
+      pageNodes.map(async (pageNode) => {
+        const rawCanvas = await html2canvasFn(pageNode, options);
+        return createNormalizedCanvas(ctxWindow, rawCanvas, pageNode, scale);
+      })
+    );
   };
 
   /**
@@ -1075,7 +1109,7 @@
       const canvasOptions = {
         scale: 2,
         useCORS: true,
-        backgroundColor: null,
+        backgroundColor: "#ffffff",
         logging: false
       };
 
