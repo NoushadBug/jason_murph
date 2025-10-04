@@ -726,50 +726,89 @@
   };
 
   /**
+   * Waits for the next animation frame so layout updates settle before snapshotting.
+   */
+  const waitForNextFrame = (ctxWindow) => {
+    return new Promise((resolve) => {
+      const targetWindow = ctxWindow || window;
+      if (targetWindow && typeof targetWindow.requestAnimationFrame === "function") {
+        targetWindow.requestAnimationFrame(() => resolve());
+        return;
+      }
+      setTimeout(resolve, 16);
+    });
+  };
+
+  /**
+   * Awaits document font loading to keep measurements consistent for printing.
+   */
+  const waitForFontsReady = async (ctxDoc) => {
+    const fontSet = ctxDoc?.fonts;
+    if (!fontSet) {
+      return;
+    }
+    const readyPromise = fontSet.ready;
+    if (readyPromise && typeof readyPromise.then === "function") {
+      try {
+        await readyPromise;
+      } catch (error) {
+        console.warn("[UConn Menu Formatter] Font loading did not complete", error);
+      }
+    }
+  };
+
+  /**
    * Automatically shrinks page typography and spacing until each poster fits the fixed canvas height.
    */
   const applyAutoFontScaling = (ctxWindow, ctxDoc) => {
-    if (!ctxDoc) {
-      return;
-    }
+    return new Promise((resolve) => {
+      if (!ctxDoc) {
+        resolve();
+        return;
+      }
 
-    const schedule = ctxWindow && typeof ctxWindow.requestAnimationFrame === "function"
-      ? ctxWindow.requestAnimationFrame.bind(ctxWindow)
-      : ctxDoc.defaultView && typeof ctxDoc.defaultView.requestAnimationFrame === "function"
-        ? ctxDoc.defaultView.requestAnimationFrame.bind(ctxDoc.defaultView)
-        : (fn) => setTimeout(fn, 0);
+      const schedule = ctxWindow && typeof ctxWindow.requestAnimationFrame === "function"
+        ? ctxWindow.requestAnimationFrame.bind(ctxWindow)
+        : ctxDoc.defaultView && typeof ctxDoc.defaultView.requestAnimationFrame === "function"
+          ? ctxDoc.defaultView.requestAnimationFrame.bind(ctxDoc.defaultView)
+          : (fn) => setTimeout(fn, 0);
 
-    schedule(() => {
-      const pages = Array.from(ctxDoc.querySelectorAll(".uconn-menu-page--poster"));
-      pages.forEach((page) => {
-        const poster = page.querySelector(".uconn-menu-poster");
-        if (!poster) {
-          return;
-        }
+      schedule(() => {
+        try {
+          const pages = Array.from(ctxDoc.querySelectorAll(".uconn-menu-page--poster"));
+          pages.forEach((page) => {
+            const poster = page.querySelector(".uconn-menu-poster");
+            if (!poster) {
+              return;
+            }
 
-        page.style.setProperty("--uconn-font-scale-auto", "0px");
-        page.style.setProperty("--uconn-space-mod-auto", "0px");
-        const availableHeight = poster.clientHeight;
-        if (!availableHeight) {
-          return;
-        }
+            page.style.setProperty("--uconn-font-scale-auto", "0px");
+            page.style.setProperty("--uconn-space-mod-auto", "0px");
+            const availableHeight = poster.clientHeight;
+            if (!availableHeight) {
+              return;
+            }
 
-        let iterations = 0;
-        while (poster.scrollHeight > availableHeight && iterations < 48) {
-          const currentScale = Number.parseFloat(page.style.getPropertyValue("--uconn-font-scale-auto") || "0") || 0;
-          if (currentScale <= AUTO_FONT_MIN) {
-            page.style.setProperty("--uconn-font-scale-auto", `${AUTO_FONT_MIN}px`);
-            page.style.setProperty("--uconn-space-mod-auto", `${AUTO_SPACE_MAX}px`);
-            break;
-          }
+            let iterations = 0;
+            while (poster.scrollHeight > availableHeight && iterations < 48) {
+              const currentScale = Number.parseFloat(page.style.getPropertyValue("--uconn-font-scale-auto") || "0") || 0;
+              if (currentScale <= AUTO_FONT_MIN) {
+                page.style.setProperty("--uconn-font-scale-auto", `${AUTO_FONT_MIN}px`);
+                page.style.setProperty("--uconn-space-mod-auto", `${AUTO_SPACE_MAX}px`);
+                break;
+              }
 
-          const nextScale = currentScale - AUTO_FONT_STEP;
-          page.style.setProperty("--uconn-font-scale-auto", `${nextScale}px`);
-          const currentSpace = Number.parseFloat(page.style.getPropertyValue("--uconn-space-mod-auto") || "0") || 0;
-          const nextSpace = Math.min(AUTO_SPACE_MAX, currentSpace + AUTO_SPACE_STEP);
-          page.style.setProperty("--uconn-space-mod-auto", `${nextSpace}px`);
-          poster.getBoundingClientRect();
-          iterations += 1;
+              const nextScale = currentScale - AUTO_FONT_STEP;
+              page.style.setProperty("--uconn-font-scale-auto", `${nextScale}px`);
+              const currentSpace = Number.parseFloat(page.style.getPropertyValue("--uconn-space-mod-auto") || "0") || 0;
+              const nextSpace = Math.min(AUTO_SPACE_MAX, currentSpace + AUTO_SPACE_STEP);
+              page.style.setProperty("--uconn-space-mod-auto", `${nextSpace}px`);
+              poster.getBoundingClientRect();
+              iterations += 1;
+            }
+          });
+        } finally {
+          resolve();
         }
       });
     });
@@ -956,6 +995,10 @@
     setPrintingState(ctxDoc, true);
 
     try {
+      await waitForFontsReady(ctxDoc);
+      await waitForNextFrame(ctxWindow);
+      await applyAutoFontScaling(ctxWindow, ctxDoc);
+      await waitForNextFrame(ctxWindow);
       const html2pdfLib = await ensureHtml2Pdf(ctxWindow, ctxDoc);
       if (typeof html2pdfLib !== "function") {
         throw new Error("html2pdf not available");
