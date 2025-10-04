@@ -984,93 +984,6 @@
     }
   };
 
-  /**
-   * Converts each poster page element into a canvas using html2canvas so the poster can be exported consistently.
-   */
-  /**
-   * Ensures the generated canvas uses consistent dimensions and a white background for PDF export.
-   */
-  const createNormalizedCanvas = (ctxWindow, canvas, pageNode, scale) => {
-    if (!(canvas instanceof ctxWindow.HTMLCanvasElement) || !pageNode) {
-      return canvas;
-    }
-
-    const bounds = pageNode.getBoundingClientRect();
-    const normalizedScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
-    const targetWidth = Math.max(1, Math.round(bounds.width * normalizedScale));
-    const targetHeight = Math.max(1, Math.round(bounds.height * normalizedScale));
-
-    const normalizedCanvas = ctxWindow.document.createElement("canvas");
-    normalizedCanvas.width = targetWidth;
-    normalizedCanvas.height = targetHeight;
-
-    const normalizedContext = normalizedCanvas.getContext("2d");
-    if (normalizedContext) {
-      normalizedContext.fillStyle = "#ffffff";
-      normalizedContext.fillRect(0, 0, targetWidth, targetHeight);
-      normalizedContext.drawImage(canvas, 0, 0, targetWidth, targetHeight);
-    }
-
-    return normalizedCanvas;
-  };
-
-  const renderPosterPagesToCanvas = async (ctxWindow, pagesContainer, options) => {
-    if (!ctxWindow || !pagesContainer) {
-      throw new Error("Preview not ready");
-    }
-
-    const html2canvasFn = ctxWindow.html2canvas;
-    if (typeof html2canvasFn !== "function") {
-      throw new Error("html2canvas not available");
-    }
-
-    const pageNodes = Array.from(pagesContainer.querySelectorAll(".uconn-menu-page"));
-    if (!pageNodes.length) {
-      throw new Error("No poster pages found");
-    }
-
-    const scale = Number.isFinite(options?.scale) && options.scale > 0 ? options.scale : ctxWindow.devicePixelRatio || 1;
-
-    return Promise.all(
-      pageNodes.map(async (pageNode) => {
-        const rawCanvas = await html2canvasFn(pageNode, options);
-        return createNormalizedCanvas(ctxWindow, rawCanvas, pageNode, scale);
-      })
-    );
-  };
-
-  /**
-   * Persists poster canvases as a PDF using jsPDF while preserving the expected 25cm by 20cm layout.
-   */
-  const saveCanvasesAsPdf = (ctxWindow, canvases, filename, pageSize) => {
-    if (!canvases.length) {
-      throw new Error("No poster canvases to export");
-    }
-
-    const JsPdfConstructor = ctxWindow?.jspdf?.jsPDF || ctxWindow?.jsPDF;
-    if (typeof JsPdfConstructor !== "function") {
-      throw new Error("jsPDF not available");
-    }
-
-    const pdf = new JsPdfConstructor({ unit: "cm", format: pageSize, orientation: "landscape" });
-    const [pageWidth, pageHeight] = pageSize;
-
-    canvases.forEach((canvas, index) => {
-      if (!(canvas instanceof ctxWindow.HTMLCanvasElement)) {
-        return;
-      }
-
-      if (index > 0) {
-        pdf.addPage();
-      }
-
-      const imageData = canvas.toDataURL("image/jpeg", 0.98);
-      pdf.addImage(imageData, "JPEG", 0, 0, pageWidth, pageHeight);
-    });
-
-    pdf.save(filename);
-  };
-
   const printPoster = async (previewWindow, ctxDoc) => {
     const ctxWindow = previewWindow || window;
     const pagesContainer = ctxDoc?.querySelector(".uconn-menu-pages");
@@ -1086,13 +999,9 @@
       await waitForNextFrame(ctxWindow);
       await applyAutoFontScaling(ctxWindow, ctxDoc);
       await waitForNextFrame(ctxWindow);
-      await ensureHtml2Pdf(ctxWindow, ctxDoc);
-      if (typeof ctxWindow.html2canvas !== "function") {
-        throw new Error("html2canvas not available");
-      }
-      const JsPdfConstructor = ctxWindow?.jspdf?.jsPDF || ctxWindow?.jsPDF;
-      if (typeof JsPdfConstructor !== "function") {
-        throw new Error("jsPDF not available");
+      const html2PdfLib = await ensureHtml2Pdf(ctxWindow, ctxDoc);
+      if (typeof html2PdfLib !== "function") {
+        throw new Error("html2pdf unavailable");
       }
 
       const poster = ctxDoc.getElementById(POSTER_ID);
@@ -1105,16 +1014,32 @@
         || "uconn-menu-poster";
       const filename = `${safeFilenameBase}.pdf`;
 
-      const pageSize = [25, 20];
-      const canvasOptions = {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false
+      const exportOptions = {
+        filename,
+        margin: 0,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          windowWidth: pagesContainer.scrollWidth,
+          windowHeight: pagesContainer.scrollHeight
+        },
+        pagebreak: {
+          mode: ["avoid-all", "css", "legacy"]
+        },
+        jsPDF: {
+          unit: "cm",
+          format: [20, 25],
+          orientation: "landscape"
+        }
       };
 
-      const canvases = await renderPosterPagesToCanvas(ctxWindow, pagesContainer, canvasOptions);
-      saveCanvasesAsPdf(ctxWindow, canvases, filename, pageSize);
+      await html2PdfLib()
+        .set(exportOptions)
+        .from(pagesContainer)
+        .save();
     } catch (error) {
       ctxWindow.console?.error?.("[UConn Menu Formatter] Failed to generate PDF", error);
       ctxWindow.alert("UConn Menu Formatter: unable to download the PDF. Please try again.");
