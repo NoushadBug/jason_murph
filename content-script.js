@@ -31,7 +31,7 @@
   const domParser = typeof DOMParser !== "undefined" ? new DOMParser() : null;
   let datePickerInput = null;
   let selectedDateIso = null;
-  let allowedWeekRange = null;
+  let allowedDateRange = null;
 
   const ICON_TAGS = {
     vegetarian: "Vegetarian",
@@ -293,14 +293,17 @@
     };
   };
 
-  const getCurrentWeekRange = () => {
+  /**
+   * Calculates the selectable date range so the picker covers the current week and the next.
+   */
+  const getSelectableDateRange = () => {
     const today = new Date();
     const start = new Date(today);
     start.setHours(0, 0, 0, 0);
     start.setDate(start.getDate() - start.getDay());
 
     const end = new Date(start);
-    end.setDate(start.getDate() + 6);
+    end.setDate(end.getDate() + 13);
     end.setHours(23, 59, 59, 999);
 
     return { start, end };
@@ -1286,11 +1289,11 @@
       return;
     }
 
-    if (!isIsoDateWithinRange(value, allowedWeekRange)) {
+    if (!isIsoDateWithinRange(value, allowedDateRange)) {
       event.target.value = selectedDateIso || "";
-      const startIso = formatDateToIso(allowedWeekRange?.start);
-      const endIso = formatDateToIso(allowedWeekRange?.end);
-      const friendlyRange = startIso && endIso ? `${startIso} to ${endIso}` : "this week";
+      const startIso = formatDateToIso(allowedDateRange?.start);
+      const endIso = formatDateToIso(allowedDateRange?.end);
+      const friendlyRange = startIso && endIso ? `${startIso} to ${endIso}` : "the allowed date range";
       alert(`UConn Menu Formatter: please pick a date within ${friendlyRange}.`);
       return;
     }
@@ -1303,12 +1306,12 @@
       return;
     }
 
-    allowedWeekRange = getCurrentWeekRange();
+    allowedDateRange = getSelectableDateRange();
     const previousSelection = selectedDateIso;
     const todayIso = formatDateToIso(new Date());
-    const fallbackIso = formatDateToIso(allowedWeekRange.start);
-    if (!previousSelection || !isIsoDateWithinRange(previousSelection, allowedWeekRange)) {
-      if (isIsoDateWithinRange(todayIso, allowedWeekRange)) {
+    const fallbackIso = formatDateToIso(allowedDateRange.start);
+    if (!previousSelection || !isIsoDateWithinRange(previousSelection, allowedDateRange)) {
+      if (isIsoDateWithinRange(todayIso, allowedDateRange)) {
         selectedDateIso = todayIso;
       } else {
         selectedDateIso = fallbackIso;
@@ -1326,8 +1329,8 @@
       datePickerInput.addEventListener("change", handleDateChange);
     }
 
-    const minIso = formatDateToIso(allowedWeekRange.start);
-    const maxIso = formatDateToIso(allowedWeekRange.end);
+    const minIso = formatDateToIso(allowedDateRange.start);
+    const maxIso = formatDateToIso(allowedDateRange.end);
     if (minIso) {
       datePickerInput.min = minIso;
     }
