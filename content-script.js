@@ -14,6 +14,7 @@
   })();
   const HTML2PDF_SCRIPT_ID = "uconn-menu-html2pdf-script";
   const HTML2PDF_SCRIPT_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+  const PRINT_DOWNLOAD_BUTTON_ID = "uconn-menu-print-download";
   const html2PdfPromises = new WeakMap();
   const MENU_SECTION_SELECTOR = ".shortmenumeals";
   const NUTRITION_LINK_SELECTOR = "#pg-60-3 a[href*='shortmenu.aspx']";
@@ -1097,6 +1098,21 @@
     const actions = previewDoc.createElement("div");
     actions.className = "uconn-menu-toolbar__actions";
 
+    /** Binds the download handler so all download buttons share the same behavior. */
+    const bindDownloadHandler = (button) => {
+      if (!button) {
+        return;
+      }
+      button.addEventListener("click", () => {
+        button.disabled = true;
+        button.classList.add("is-disabled");
+        Promise.resolve(printPoster(previewWindow, previewDoc)).finally(() => {
+          button.disabled = false;
+          button.classList.remove("is-disabled");
+        });
+      });
+    };
+
     const fontSmallerButton = previewDoc.createElement("button");
     fontSmallerButton.type = "button";
     fontSmallerButton.className = "uconn-menu-toolbar__button";
@@ -1175,14 +1191,7 @@
     printButton.type = "button";
     printButton.className = "uconn-menu-toolbar__button uconn-menu-toolbar__button--primary";
     printButton.innerText = "Download PDF";
-    printButton.addEventListener("click", () => {
-      printButton.disabled = true;
-      printButton.classList.add("is-disabled");
-      Promise.resolve(printPoster(previewWindow, previewDoc)).finally(() => {
-        printButton.disabled = false;
-        printButton.classList.remove("is-disabled");
-      });
-    });
+    bindDownloadHandler(printButton);
 
     const closeButton = previewDoc.createElement("button");
     closeButton.type = "button";
@@ -1216,6 +1225,14 @@
     documentRoot.appendChild(pages);
 
     previewDoc.body.appendChild(documentRoot);
+
+    const printStateDownloadButton = previewDoc.createElement("button");
+    printStateDownloadButton.type = "button";
+    printStateDownloadButton.id = PRINT_DOWNLOAD_BUTTON_ID;
+    printStateDownloadButton.className = "uconn-menu-print-download";
+    printStateDownloadButton.innerText = "Download PDF";
+    bindDownloadHandler(printStateDownloadButton);
+    previewDoc.body.appendChild(printStateDownloadButton);
     applyAutoFontScaling(previewWindow, previewDoc);
     previewWindow.focus();
 

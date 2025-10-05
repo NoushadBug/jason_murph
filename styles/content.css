@@ -593,10 +593,53 @@ body[data-uconn-printing='true'] .uconn-menu-page {
   page-break-after: always;
 }
 
+body[data-uconn-printing='true'] .uconn-menu-print-download {
+  display: inline-flex;
+}
+
 body[data-uconn-printing='true'] #uconn-menu-poster,
 body[data-uconn-printing='true'] .uconn-menu-poster,
 body[data-uconn-printing='true'] .uconn-menu-info {
   box-shadow: none !important;
   margin: 0 auto !important;
   border: none !important;
+}
+
+.uconn-menu-print-download {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  background: #0b2c6a;
+  color: #ffffff;
+  border: none;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(11, 44, 106, 0.25);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  z-index: 2147483647;
+}
+
+.uconn-menu-print-download:hover {
+  background: #07204a;
+  transform: translateY(-1px);
+}
+
+.uconn-menu-print-download:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+.uconn-menu-print-download.is-disabled {
+  opacity: 0.6;
+  cursor: progress;
+  pointer-events: none;
 }
