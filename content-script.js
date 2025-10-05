@@ -1326,14 +1326,6 @@
       datePickerInput.addEventListener("change", handleDateChange);
     }
 
-    const minIso = formatDateToIso(allowedWeekRange.start);
-    const maxIso = formatDateToIso(allowedWeekRange.end);
-    if (minIso) {
-      datePickerInput.min = minIso;
-    }
-    if (maxIso) {
-      datePickerInput.max = maxIso;
-    }
     if (selectedDateIso) {
       datePickerInput.value = selectedDateIso;
     }
