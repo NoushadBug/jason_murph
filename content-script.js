@@ -14,7 +14,6 @@
   })();
   const HTML2PDF_SCRIPT_ID = "uconn-menu-html2pdf-script";
   const HTML2PDF_SCRIPT_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-  const PRINT_DOWNLOAD_BUTTON_ID = "uconn-menu-print-download";
   const html2PdfPromises = new WeakMap();
   const MENU_SECTION_SELECTOR = ".shortmenumeals";
   const NUTRITION_LINK_SELECTOR = "#pg-60-3 a[href*='shortmenu.aspx']";
@@ -1076,10 +1075,6 @@
     previewDoc.body.classList.add("uconn-menu-preview");
     ensureStylesheet(previewDoc);
     ensureFonts(previewDoc);
-    ensureHtml2Pdf(previewWindow, previewDoc).catch((error) => {
-      previewWindow.console?.warn?.("[UConn Menu Formatter] html2pdf failed to preload", error);
-    });
-
     const closePreview = () => {
       setPrintingState(previewDoc, false);
       previewWindow.close();
@@ -1097,21 +1092,6 @@
 
     const actions = previewDoc.createElement("div");
     actions.className = "uconn-menu-toolbar__actions";
-
-    /** Binds the download handler so all download buttons share the same behavior. */
-    const bindDownloadHandler = (button) => {
-      if (!button) {
-        return;
-      }
-      button.addEventListener("click", () => {
-        button.disabled = true;
-        button.classList.add("is-disabled");
-        Promise.resolve(printPoster(previewWindow, previewDoc)).finally(() => {
-          button.disabled = false;
-          button.classList.remove("is-disabled");
-        });
-      });
-    };
 
     const fontSmallerButton = previewDoc.createElement("button");
     fontSmallerButton.type = "button";
@@ -1187,12 +1167,6 @@
     fontControls.appendChild(fontSmallerButton);
     fontControls.appendChild(fontBiggerButton);
 
-    const printButton = previewDoc.createElement("button");
-    printButton.type = "button";
-    printButton.className = "uconn-menu-toolbar__button uconn-menu-toolbar__button--primary";
-    printButton.innerText = "Download PDF";
-    bindDownloadHandler(printButton);
-
     const closeButton = previewDoc.createElement("button");
     closeButton.type = "button";
     closeButton.className = "uconn-menu-toolbar__button uconn-menu-toolbar__button--secondary";
@@ -1201,7 +1175,6 @@
 
     actions.appendChild(fontControls);
     actions.appendChild(colorPalette);
-    actions.appendChild(printButton);
     actions.appendChild(closeButton);
 
     toolbar.appendChild(instructions);
@@ -1226,13 +1199,6 @@
 
     previewDoc.body.appendChild(documentRoot);
 
-    const printStateDownloadButton = previewDoc.createElement("button");
-    printStateDownloadButton.type = "button";
-    printStateDownloadButton.id = PRINT_DOWNLOAD_BUTTON_ID;
-    printStateDownloadButton.className = "uconn-menu-print-download";
-    printStateDownloadButton.innerText = "Download PDF";
-    bindDownloadHandler(printStateDownloadButton);
-    previewDoc.body.appendChild(printStateDownloadButton);
     applyAutoFontScaling(previewWindow, previewDoc);
     previewWindow.focus();
 
