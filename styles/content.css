@@ -102,6 +102,10 @@ body.uconn-menu-preview {
   color: #ffffff;
 }
 
+.uconn-menu-toolbar--hidden {
+  display: none !important;
+}
+
 .uconn-menu-toolbar__font-controls {
   display: flex;
   align-items: center;
@@ -154,6 +158,17 @@ body.uconn-menu-preview {
   letter-spacing: 0.04em;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.uconn-menu-toolbar__button--primary {
+  background: #ffffff;
+  color: #0b2c6a;
+  box-shadow: 0 12px 24px rgba(15, 39, 85, 0.25);
+}
+
+.uconn-menu-toolbar__button--primary:hover {
+  transform: translateY(-1px);
+  background: #f3f4f6;
 }
 
 .uconn-menu-toolbar__button--secondary {

@@ -1167,6 +1167,32 @@
     fontControls.appendChild(fontSmallerButton);
     fontControls.appendChild(fontBiggerButton);
 
+    const printButton = previewDoc.createElement("button");
+    printButton.type = "button";
+    printButton.className = "uconn-menu-toolbar__button uconn-menu-toolbar__button--primary";
+    printButton.innerText = "Print";
+    printButton.addEventListener("click", () => {
+      if (!toolbar) {
+        return;
+      }
+      toolbar.classList.add("uconn-menu-toolbar--hidden");
+      const executePrint = () => {
+        try {
+          previewWindow.focus();
+          previewWindow.print();
+        } finally {
+          toolbar.classList.remove("uconn-menu-toolbar--hidden");
+        }
+      };
+      if (typeof previewWindow.requestAnimationFrame === "function") {
+        previewWindow.requestAnimationFrame(() => {
+          previewWindow.setTimeout(executePrint, 0);
+        });
+      } else {
+        previewWindow.setTimeout(executePrint, 0);
+      }
+    });
+
     const closeButton = previewDoc.createElement("button");
     closeButton.type = "button";
     closeButton.className = "uconn-menu-toolbar__button uconn-menu-toolbar__button--secondary";
@@ -1175,6 +1201,7 @@
 
     actions.appendChild(fontControls);
     actions.appendChild(colorPalette);
+    actions.appendChild(printButton);
     actions.appendChild(closeButton);
 
     toolbar.appendChild(instructions);
