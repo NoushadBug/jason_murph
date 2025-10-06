@@ -907,6 +907,21 @@
     ctxDoc.head.appendChild(link);
   };
 
+  /**
+   * Toggles the preview toolbar visibility when preparing to print.
+   */
+  const setToolbarHiddenForPrint = (ctxDoc, hidden) => {
+    const toolbar = ctxDoc?.querySelector?.(".uconn-menu-toolbar");
+    if (!toolbar) {
+      return;
+    }
+    if (hidden) {
+      toolbar.classList.add("uconn-menu-toolbar--hidden-for-print");
+    } else {
+      toolbar.classList.remove("uconn-menu-toolbar--hidden-for-print");
+    }
+  };
+
   const setPrintingState = (ctxDoc, isPrinting) => {
     if (!ctxDoc?.body) {
       return;
@@ -916,6 +931,7 @@
     } else {
       delete ctxDoc.body.dataset.uconnPrinting;
     }
+    setToolbarHiddenForPrint(ctxDoc, Boolean(isPrinting));
   };
 
   const printPoster = async (previewWindow, ctxDoc) => {
