@@ -970,6 +970,14 @@
     previewDoc.body.classList.add("uconn-menu-preview");
     ensureStylesheet(previewDoc);
     ensureFonts(previewDoc);
+    const handleBeforePrint = () => setPrintingState(previewDoc, true);
+    const handleAfterPrint = () => setPrintingState(previewDoc, false);
+    previewWindow.addEventListener("beforeprint", handleBeforePrint);
+    previewWindow.addEventListener("afterprint", handleAfterPrint);
+    previewWindow.addEventListener("unload", () => {
+      previewWindow.removeEventListener("beforeprint", handleBeforePrint);
+      previewWindow.removeEventListener("afterprint", handleAfterPrint);
+    });
     const closePreview = () => {
       setPrintingState(previewDoc, false);
       previewWindow.close();
