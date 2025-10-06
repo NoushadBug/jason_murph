@@ -108,6 +108,10 @@ body[data-uconn-printing='true'] .uconn-menu-trigger__date-label {
   color: #ffffff;
 }
 
+.uconn-menu-toolbar--hidden-for-print {
+  display: none !important;
+}
+
 .uconn-menu-toolbar__font-controls {
   display: flex;
   align-items: center;
