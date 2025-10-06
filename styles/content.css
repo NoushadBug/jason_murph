@@ -73,6 +73,12 @@ body.uconn-menu-preview {
   color: #ffffff;
 }
 
+body[data-uconn-printing='true'] .uconn-menu-toolbar,
+body[data-uconn-printing='true'] .uconn-menu-trigger-wrapper,
+body[data-uconn-printing='true'] .uconn-menu-trigger__date-label {
+  display: none !important;
+}
+
 .uconn-menu-document {
   width: 100%;
   min-height: 100vh;
@@ -237,6 +243,14 @@ body.uconn-menu-preview {
   body, .uconn-menu-document { margin: 0; padding: 0; }
   .uconn-menu-pages { width: 25cm; }
   #uconn-menu-poster, .uconn-menu-poster { width: 25cm; height: 20cm; box-shadow: none; border-width: 0.4cm; }
+  .uconn-menu-toolbar,
+  .uconn-menu-trigger-wrapper,
+  .uconn-menu-trigger__date-label {
+    display: none !important;
+  }
+  body.uconn-menu-preview {
+    background: #ffffff;
+  }
 }
 
 .uconn-menu-poster__header {
