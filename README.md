@@ -13,7 +13,7 @@ Chrome extension that turns UConn Dining's "short menu" pages into a Canva-style
 - Click the button to open the overlay poster.
   - Click a menu item to toggle the green "suggested" styling.
   - Double-click text (titles, notes, allergens, categories) to tweak wording or add ratings.
-  - Press **Download PDF** to automatically export the poster; all pages are rendered to canvases before saving the PDF.
+  - Press **Print / Save PDF** to open the browser print dialog and export the poster. Use the system "Save as PDF" option to download.
   - Use the `×` button to close the overlay when you are done.
 
 ## Customising the look
