@@ -294,16 +294,9 @@
    * Calculates the selectable date range so the picker covers the current week and the next.
    */
   const getSelectableDateRange = () => {
-    const today = new Date();
-    const start = new Date(today);
-    start.setHours(0, 0, 0, 0);
-    start.setDate(start.getDate() - start.getDay());
-
-    const end = new Date(start);
-    end.setDate(end.getDate() + 13);
-    end.setHours(23, 59, 59, 999);
-
-    return { start, end };
+    // Returning null removes date range restrictions.
+    // The original implementation limited selection to the current and next week.
+    return { start: null, end: null };
   };
 
   const formatDateToIso = (date) => {
@@ -1201,15 +1194,6 @@
       return;
     }
 
-    if (!isIsoDateWithinRange(value, allowedDateRange)) {
-      event.target.value = selectedDateIso || "";
-      const startIso = formatDateToIso(allowedDateRange?.start);
-      const endIso = formatDateToIso(allowedDateRange?.end);
-      const friendlyRange = startIso && endIso ? `${startIso} to ${endIso}` : "the allowed date range";
-      alert(`UConn Menu Formatter: please pick a date within ${friendlyRange}.`);
-      return;
-    }
-
     selectedDateIso = value;
   };
 
@@ -1221,14 +1205,7 @@
     allowedDateRange = getSelectableDateRange();
     const previousSelection = selectedDateIso;
     const todayIso = formatDateToIso(new Date());
-    const fallbackIso = formatDateToIso(allowedDateRange.start);
-    if (!previousSelection || !isIsoDateWithinRange(previousSelection, allowedDateRange)) {
-      if (isIsoDateWithinRange(todayIso, allowedDateRange)) {
-        selectedDateIso = todayIso;
-      } else {
-        selectedDateIso = fallbackIso;
-      }
-    }
+    selectedDateIso = previousSelection || todayIso;
 
     const existingInput = document.getElementById(DATE_PICKER_ID);
     if (existingInput) {
@@ -1243,12 +1220,8 @@
 
     const minIso = formatDateToIso(allowedDateRange.start);
     const maxIso = formatDateToIso(allowedDateRange.end);
-    if (minIso) {
-      datePickerInput.min = minIso;
-    }
-    if (maxIso) {
-      datePickerInput.max = maxIso;
-    }
+    datePickerInput.min = minIso || "";
+    datePickerInput.max = maxIso || "";
     if (selectedDateIso) {
       datePickerInput.value = selectedDateIso;
     }
