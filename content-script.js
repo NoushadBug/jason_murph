@@ -31,7 +31,6 @@
   const domParser = typeof DOMParser !== "undefined" ? new DOMParser() : null;
   let datePickerInput = null;
   let selectedDateIso = null;
-  let allowedWeekRange = null;
 
   const ICON_TAGS = {
     vegetarian: "Vegetarian",
@@ -293,19 +292,6 @@
     };
   };
 
-  const getCurrentWeekRange = () => {
-    const today = new Date();
-    const start = new Date(today);
-    start.setHours(0, 0, 0, 0);
-    start.setDate(start.getDate() - start.getDay());
-
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    end.setHours(23, 59, 59, 999);
-
-    return { start, end };
-  };
-
   const formatDateToIso = (date) => {
     if (!(date instanceof Date) || Number.isNaN(date.valueOf())) {
       return "";
@@ -314,17 +300,6 @@
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
-  };
-
-  const isIsoDateWithinRange = (isoDate, range) => {
-    if (!isoDate || !range?.start || !range?.end) {
-      return false;
-    }
-    const probe = new Date(`${isoDate}T00:00:00`);
-    if (Number.isNaN(probe.valueOf())) {
-      return false;
-    }
-    return probe >= range.start && probe <= range.end;
   };
 
   const formatIsoDateForQuery = (isoDate) => {
@@ -1295,16 +1270,6 @@
       event.target.value = selectedDateIso || "";
       return;
     }
-
-    if (!isIsoDateWithinRange(value, allowedWeekRange)) {
-      event.target.value = selectedDateIso || "";
-      const startIso = formatDateToIso(allowedWeekRange?.start);
-      const endIso = formatDateToIso(allowedWeekRange?.end);
-      const friendlyRange = startIso && endIso ? `${startIso} to ${endIso}` : "this week";
-      alert(`UConn Menu Formatter: please pick a date within ${friendlyRange}.`);
-      return;
-    }
-
     selectedDateIso = value;
   };
 
@@ -1313,16 +1278,9 @@
       return;
     }
 
-    allowedWeekRange = getCurrentWeekRange();
-    const previousSelection = selectedDateIso;
     const todayIso = formatDateToIso(new Date());
-    const fallbackIso = formatDateToIso(allowedWeekRange.start);
-    if (!previousSelection || !isIsoDateWithinRange(previousSelection, allowedWeekRange)) {
-      if (isIsoDateWithinRange(todayIso, allowedWeekRange)) {
-        selectedDateIso = todayIso;
-      } else {
-        selectedDateIso = fallbackIso;
-      }
+    if (!selectedDateIso) {
+      selectedDateIso = todayIso;
     }
 
     const existingInput = document.getElementById(DATE_PICKER_ID);
